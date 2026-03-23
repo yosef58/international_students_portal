@@ -29,7 +29,7 @@ router.post(
   '/:id/upload',
   protect,
   allowRoles('student'),
-  upload.single('document'),
+  upload.array('document',3),
   uploadDocument
 );
 
