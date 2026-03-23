@@ -139,7 +139,7 @@ const Employeeregister = asyncwrapper(async (req, res, next) => {
 // =============================
 const login = asyncwrapper(async (req, res, next) => {
 
-  const { email, password } = req.body;
+  const { email, password,role } = req.body;
 
   const user = await User.findOne({ email });
 
@@ -150,10 +150,17 @@ const login = asyncwrapper(async (req, res, next) => {
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
+  
+    if (!isMatch ) {
+      return next(
+        new AppError("Invalid credentials", 401, httpstatustext.FAIL)
+      );
+    }
 
-  if (!isMatch) {
+
+  if (!role || role!==user.role) {
     return next(
-      new AppError("Invalid credentials", 401, httpstatustext.FAIL)
+      new AppError(`${role}not allow to login`, 403, httpstatustext.FAIL)
     );
   }
 
