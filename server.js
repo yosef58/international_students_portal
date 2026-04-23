@@ -2,6 +2,7 @@ import express  from 'express';
 import cors  from 'cors';
 import dotenv  from 'dotenv';
 import connectDB  from './config/db.js';
+import cookieParser from "cookie-parser";
 
 import authRoutes  from './routes/authRoutes.js';
 import serviceRoutes  from './routes/serviceRoutes.js';
@@ -17,8 +18,17 @@ connectDB();
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5000",
+      "https://internationalstudentsportal-production-5e18.up.railway.app"
+    ],
+    credentials: true
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 
 // ALL Routes
 app.use('/api/auth', authRoutes);

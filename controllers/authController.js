@@ -68,11 +68,10 @@ const Studentregister = asyncwrapper(async (req, res, next) => {
     gender
   });
 
-  const token = generateToken(user._id);
+
 
   res.status(201).json({
     status: httpstatustext.SUCCESS,
-    token,
     message: "Student registered successfully",
     email: user.email
   });
@@ -123,13 +122,12 @@ const Employeeregister = asyncwrapper(async (req, res, next) => {
     role,
     department
   });
-  const token = generateToken(user._id);
 
 
+  
   res.status(201).json({
     status: httpstatustext.SUCCESS,
     message: "Employee created",
-    token,
     email: user.email,
     role: employee.role
   });
@@ -169,22 +167,47 @@ const login = asyncwrapper(async (req, res, next) => {
 
   const token = generateToken(user._id);
 
-  res.json({
-    status: httpstatustext.SUCCESS,
-    token,
-    user: {
+  res.cookie("token", token, {
+  httpOnly: true,
+  secure: true,       // production لازم https
+  sameSite: "none",   // مهم مع cross-origin
+  maxAge: 7 * 24 * 60 * 60 * 1000
+});
+
+res.json({
+  status: httpstatustext.SUCCESS,
+  message: "Logged in successfully",
+  user: {
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role
     }
   });
+});
 
+
+
+// =============================
+// // LOGIN
+// =============================
+const logout = asyncwrapper(async (req, res, next) =>  {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none"
+  });
+
+  res.json({
+    status: "success",
+    message: "Logged out successfully"
+  });
 });
 
 
 export  {
    login,
    Studentregister,
-   Employeeregister
+   Employeeregister,
+   logout
 };
