@@ -140,7 +140,7 @@ const cancelRequest = asyncwrapper(async (req, res, next) => {
 // ==============================
 // UPLOAD DOCUMENT
 // ==============================
-const uploadDocument = asyncwrapper(async (req, res, next) => {
+const uploadDocuments = asyncwrapper(async (req, res, next) => {
 
   if (!req.file) {
     return next(new AppError("No file uploaded",400,httpstatustext.FAIL));
@@ -177,5 +177,5 @@ export  {
     getMyRequests,
     reviewRequest,
     cancelRequest,
-    uploadDocument
+    uploadDocuments
   };

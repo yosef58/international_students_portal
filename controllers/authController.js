@@ -25,6 +25,9 @@ const generateToken = (id) => {
 // =============================
 const Studentregister = asyncwrapper(async (req, res, next) => {
 
+  const avatar = req.file
+  ? `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`
+  : null;
   const {
     name,
     email,
@@ -56,7 +59,8 @@ const Studentregister = asyncwrapper(async (req, res, next) => {
     name,
     email,
     password: hashedPassword,
-    role: "student"
+    role: "student",
+    avatar
   });
 
   await Student.create({
@@ -83,7 +87,11 @@ const Studentregister = asyncwrapper(async (req, res, next) => {
 // EMPLOYEE REGISTER
 // =============================
 const Employeeregister = asyncwrapper(async (req, res, next) => {
+  
 
+  const avatar = req.file
+  ? `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`
+  : null;
   const {
     name,
     email,
@@ -113,7 +121,8 @@ const Employeeregister = asyncwrapper(async (req, res, next) => {
     name,
     email,
     password: hashedPassword,
-    role
+    role,
+    avatar
   });
 
   const employee = await Employee.create({
@@ -123,8 +132,6 @@ const Employeeregister = asyncwrapper(async (req, res, next) => {
     department
   });
 
-
-  
   res.status(201).json({
     status: httpstatustext.SUCCESS,
     message: "Employee created",
@@ -181,7 +188,8 @@ res.json({
       id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      avatar: user.avatar   // ← add this
     }
   });
 });
@@ -189,7 +197,7 @@ res.json({
 
 
 // =============================
-// // LOGIN
+// // LOGOUT
 // =============================
 const logout = asyncwrapper(async (req, res, next) =>  {
   res.clearCookie("token", {
@@ -209,5 +217,6 @@ export  {
    login,
    Studentregister,
    Employeeregister,
-   logout
+   logout,
+   updateAvatar
 };
