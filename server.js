@@ -3,6 +3,7 @@ import cors  from 'cors';
 import dotenv  from 'dotenv';
 import connectDB  from './config/db.js';
 import cookieParser from "cookie-parser";
+import helmet from 'helmet';
 
 import authRoutes  from './routes/authRoutes.js';
 import serviceRoutes  from './routes/serviceRoutes.js';
@@ -21,7 +22,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5000",
+      "http://localhost:5173",
       "https://internationalstudentsportal-production-5e18.up.railway.app"
     ],
     credentials: true
@@ -29,6 +30,16 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "trusted.com"],
+      },
+    },
+  })
+);
 
 // ALL Routes
 app.use('/api/auth', authRoutes);

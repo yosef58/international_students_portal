@@ -8,8 +8,12 @@ import paginate from '../utils/pagination.js';
 // CREATE SERVICE
 // ==============================
 const createService = asyncwrapper(async (req, res, next) => {
-  const service = await Service.create(req.body);
 
+  const service = await Service.create({
+    ...req.body,
+    image: req.file ? req.file.path : null
+  });
+  
   if (!service) {
     return next(new AppError("Service creation failed", 500, httpstatustext.ERROR));
   }
@@ -52,29 +56,30 @@ const getServices = asyncwrapper(async (req, res, next) => {
 // ==============================
 const updateService = asyncwrapper(async (req, res, next) => {
 
-  const { id } = req.params;
-  
+  const updateData = {
+    ...req.body
+  };
+
+  if (req.file) {
+    updateData.image = req.file.path;
+  }
+
   const service = await Service.findByIdAndUpdate(
-    id,
-    req.body,
-    {
-      new: true,
-      runValidators: true
-    }
+    req.params.id,
+    updateData,
+    { new: true, runValidators: true }
   );
-  
+
   if (!service) {
     return next(new AppError("Service not found", 404, httpstatustext.FAIL));
   }
-  
+
   res.status(200).json({
     status: httpstatustext.SUCCESS,
-    message: "Service updated successfully",
     data: service
   });
-  
-});
 
+});
 
 // ==============================
 // DELETE SERVICE
