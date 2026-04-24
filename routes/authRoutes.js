@@ -3,7 +3,6 @@ import { Studentregister,Employeeregister, login, logout} from '../controllers/a
 import { protect } from '../middlewares/authMiddleware.js';
 import { allowRoles } from '../middlewares/roleMiddleware.js';
 import rateLimit from 'express-rate-limit';
-import { uploadAvatar } from '../middlewares/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -17,9 +16,8 @@ const loginLimiter = rateLimit({
   standardHeaders: true,     // sends RateLimit headers in the response
   legacyHeaders: false
 });
-
-router.post('/register/student', protect, allowRoles('admin','staff'),  uploadAvatar.single('avatar'), Studentregister);
-router.post('/register/employee', protect, allowRoles('admin'),  uploadAvatar.single('avatar'),Employeeregister);
+router.post('/register/student', protect, allowRoles('admin','staff'), Studentregister);
+router.post('/register/employee', protect, allowRoles('admin'),Employeeregister);
 router.post('/login',loginLimiter, login);
 router.post('/logout',protect, logout);
 

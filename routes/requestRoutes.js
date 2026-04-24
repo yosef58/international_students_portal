@@ -6,9 +6,9 @@ import {
   getMyRequests,
   reviewRequest,
   cancelRequest,
-  uploadDocuments
+  uploadDocument
 } from '../controllers/requestController.js';
-import { uploadDocument } from '../middlewares/uploadMiddleware.js';
+import { upload } from '../middlewares/uploadMiddleware.js';
 
 
 const router = express.Router();
@@ -29,8 +29,8 @@ router.post(
   '/:id/upload',
   protect,
   allowRoles('student'),
-  uploadDocument.array('document', 3),
-  uploadDocuments
+  upload.array('document',3),
+  uploadDocument
 );
 
 export default router;
