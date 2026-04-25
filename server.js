@@ -50,10 +50,6 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/uploads', express.static('uploads'));
 
-// // Test Route
-// app.all('/*', (req, res) => {
-//   res.send('this resourse is not available');
-// });
 
 app.use((err,req,res,next)=>{
   res.status(err.StatusCode||500).json({status :err.StatusText||httpstatustext.ERROR,message:err.message})
