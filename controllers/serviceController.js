@@ -9,8 +9,13 @@ import paginate from '../utils/pagination.js';
 // ==============================
 const createService = asyncwrapper(async (req, res, next) => {
 
+  const { name, description, category, price, requiredDocuments } = req.body;
   const service = await Service.create({
-    ...req.body,
+    name,
+    description,
+    category,
+    price,
+    requiredDocuments,
     image: req.file ? req.file.path : null
   });
   
@@ -36,10 +41,6 @@ const getServices = asyncwrapper(async (req, res, next) => {
     .skip(pagination.skip)
     .limit(pagination.limit);
 
-  if (!services || services.length === 0) {
-    return next(new AppError("No services found", 404, httpstatustext.FAIL));
-  }
-
   res.status(200).json({
     status: httpstatustext.SUCCESS,
     page: pagination.page,
@@ -56,9 +57,11 @@ const getServices = asyncwrapper(async (req, res, next) => {
 // ==============================
 const updateService = asyncwrapper(async (req, res, next) => {
 
-  const updateData = {
-    ...req.body
-  };
+  const { name, description, category, price, requiredDocuments } = req.body;
+  const updateData = { name, description, category, price, requiredDocuments };
+
+  if (req.file) updateData.image = req.file.path;
+
 
   if (req.file) {
     updateData.image = req.file.path;

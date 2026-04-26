@@ -169,7 +169,7 @@ const login = asyncwrapper(async (req, res, next) => {
 
   if (!role || role!==user.role) {
     return next(
-      new AppError(`${role}not allow to login`, 403, httpstatustext.FAIL)
+      new AppError(`${role} not allow to login`, 403, httpstatustext.FAIL)
     );
   }
 

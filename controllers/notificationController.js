@@ -11,11 +11,10 @@ import paginate  from '../utils/pagination.js';
 // ==============================
 const getMyNotifications = asyncwrapper(async (req, res, next) => {
 
+  const filter = { user: req.user.id };
   const pagination = await paginate(Notification, req);
 
-  const notifications = await Notification.find({
-    user: req.user.id
-  })
+  const notifications = await Notification.find(filter)
     .sort({ createdAt: -1 })
     .skip(pagination.skip)
     .limit(pagination.limit);

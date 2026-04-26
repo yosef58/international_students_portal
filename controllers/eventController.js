@@ -12,29 +12,30 @@ import paginate  from '../utils/pagination.js';
 // CREATE EVENT
 // ==============================
 const createEvent = asyncwrapper(async (req, res, next) => {
-
-  const event = await Event.create({
-    ...req.body,
-    createdBy: req.user.id
-  });
+  
+  const { title, description, date, location } = req.body;
+  const event = await Event.create({ title, description, date, location, createdBy: req.user.id });
+  
+    res.status(201).json({
+      status: httpstatustext.SUCCESS,
+      data: event
+    });
 
   // إرسال إشعار لكل الطلاب
-  const students = await User.find({ role: "student" });
+  try{
+    const students = await User.find({ role: "student" });
 
-  const notifications = students.map(student => ({
-    user: student._id,
-    message: `New event created: ${event.title}`
-  }));
-
-  if (notifications.length > 0) {
-    await Notification.insertMany(notifications);
+    const notifications = students.map(student => ({
+      user: student._id,
+      message: `New event created: ${event.title}`
+    }));
+  
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+  }catch (err) {
+    console.error("Notification error:", err.message); // fails silently
   }
-
-  res.status(201).json({
-    status: httpstatustext.SUCCESS,
-    data: event
-  });
-
 });
 
 // ==============================
@@ -86,14 +87,13 @@ const updateEvent = asyncwrapper(async (req, res, next) => {
 
   const { id } = req.params;
 
+  const { title, description, date, location } = req.body;
   const event = await Event.findByIdAndUpdate(
     id,
-    req.body,
-    {
-      new: true,
-      runValidators: true
-    }
+    { title, description, date, location },
+    { new: true, runValidators: true }
   );
+
 
   if (!event) {
     return next(

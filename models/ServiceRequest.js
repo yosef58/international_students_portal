@@ -15,8 +15,7 @@ const serviceRequestSchema = new mongoose.Schema({
   }
 ],
   reviewNotes: String,
-  createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 serviceRequestSchema.index(
   { student: 1, service: 1 },
   { unique: true }
