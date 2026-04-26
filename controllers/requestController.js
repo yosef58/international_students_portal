@@ -156,8 +156,8 @@ const uploadDocuments = asyncwrapper(async (req, res, next) => {
   }
 
   request.documents.push({
-    filename: req.file.filename,
-    path: req.file.path
+    filename: req.file.originalname,
+        path: req.file.path
   });
 
   await request.save();

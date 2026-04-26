@@ -25,9 +25,7 @@ const generateToken = (id) => {
 // =============================
 const Studentregister = asyncwrapper(async (req, res, next) => {
 
-  const avatar = req.file
-  ? `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`
-  : null;
+  const avatar = req.file ? req.file.path : null;
   const {
     name,
     email,
@@ -88,9 +86,7 @@ const Studentregister = asyncwrapper(async (req, res, next) => {
 // =============================
 const Employeeregister = asyncwrapper(async (req, res, next) => {
 
-  const avatar = req.file
-  ? `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, '/')}`
-  : null;
+  const avatar = req.file ? req.file.path : null;
   const {
     name,
     email,

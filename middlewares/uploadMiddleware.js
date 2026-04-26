@@ -1,23 +1,23 @@
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
-import fs from 'fs';
 
-// Helper: create folder if it doesn't exist
-// this part need to update before redeployment
-const ensureDir = (dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-};
+// ✅ Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const createStorage = (folder) =>
-  multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = `uploads/${folder}`;
-      ensureDir(dir);
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, unique + path.extname(file.originalname).toLowerCase());
+// ✅ Helper to create Cloudinary storage per folder
+const createCloudinaryStorage = (folder, resourceType = 'auto') =>
+  new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: `uploads/${folder}`,
+      resource_type: resourceType,
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'pdf']
     }
   });
 
@@ -35,21 +35,21 @@ const imageFilter = (req, file, cb) => {
 
 // uploads/documents — for service request attachments
 export const uploadDocument = multer({
-  storage: createStorage('documents'),
+  storage: createCloudinaryStorage('documents'),
   fileFilter: documentFilter,
-  limits: { fileSize: 15 * 1024 * 1024 } // 15MB
+  limits: { fileSize: 15 * 1024 * 1024 }
 });
 
 // uploads/services — for service cover images
 export const uploadServiceImage = multer({
-  storage: createStorage('services'),
+  storage: createCloudinaryStorage('services'),
   fileFilter: imageFilter,
-  limits: { fileSize: 6 * 1024 * 1024 } // 6MB
+  limits: { fileSize: 6 * 1024 * 1024 }
 });
 
 // uploads/avatars — for user profile pictures
 export const uploadAvatar = multer({
-  storage: createStorage('avatars'),
+  storage: createCloudinaryStorage('avatars'),
   fileFilter: imageFilter,
-  limits: { fileSize: 6 * 1024 * 1024 } // 6MB
+  limits: { fileSize: 6 * 1024 * 1024 }
 });
