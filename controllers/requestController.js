@@ -29,10 +29,17 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
     return next(new AppError("Request already submitted",400,httpstatustext.FAIL));
   }
 
+  const requiredDocuments = service.requiredDocuments.map(docName => ({
+    name: docName,
+    isUploaded: false,
+    file: { filename: null, path: null }
+  }));
+
   const request = await ServiceRequest.create({
     student: req.user.id,
     service: serviceId,
-    category: service.category
+    category: service.category,
+    requiredDocuments
   });
 
   res.status(201).json({
@@ -156,10 +163,20 @@ const uploadDocuments = asyncwrapper(async (req, res, next) => {
     return next(new AppError("Unauthorized",403,httpstatustext.FAIL));
   }
 
-  request.documents.push({
+  const { documentName } = req.body; // ✅ frontend sends which document they're uploading
+
+  // ✅ Find the matching required document and mark it uploaded
+  const doc = request.requiredDocuments.find(d => d.name === documentName);
+
+  if (!doc) {
+    return next(new AppError(`Document "${documentName}" is not required for this request`, 400, httpstatustext.FAIL));
+  }
+
+  doc.isUploaded = true;
+  doc.file = {
     filename: req.file.originalname,
-        path: req.file.path
-  });
+    path: req.file.path  // Cloudinary URL
+  };
 
   await request.save();
 

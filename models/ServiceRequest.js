@@ -14,12 +14,16 @@ const serviceRequestSchema = new mongoose.Schema({
     enum: ['Pending', 'Approved', 'Rejected', 'Cancelled'],
     default: 'Pending'
   },
-  documents: [
-  {
-    filename: String,
-    path: String
-  }
-],
+  requiredDocuments: [
+    {
+      name: { type: String, required: true },       // e.g. "Passport Copy"
+      isUploaded: { type: Boolean, default: false }, // did student upload it?
+      file: {
+        filename: { type: String, default: null },
+        path: { type: String, default: null }
+      }
+    }
+  ],
   reviewNotes: String,
 }, { timestamps: true });
 serviceRequestSchema.index(
