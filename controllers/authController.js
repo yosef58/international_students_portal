@@ -178,15 +178,31 @@ const login = asyncwrapper(async (req, res, next) => {
   maxAge: 7 * 24 * 60 * 60 * 1000
 });
 
-res.json({
-  status: httpstatustext.SUCCESS,
-  message: "Logged in successfully",
-  user: {
+ let extraData = {};
+  
+ if (user.role === "student") {
+  const student = await Student.findOne({ user: user._id });
+  if (student) {  
+    extraData = {
+        studentId: student.studentId,
+        passportNumber: student.passportNumber,
+        nationality: student.nationality,
+        phone: student.phone,
+        gender: student.gender
+      };
+    }
+  }
+
+  res.json({
+    status: httpstatustext.SUCCESS,
+    message: "Logged in successfully",
+    user: {
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      avatar: user.avatar   
+      avatar: user.avatar,
+      ...extraData
     }
   });
 });

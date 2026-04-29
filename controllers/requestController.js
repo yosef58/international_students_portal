@@ -31,7 +31,8 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
 
   const request = await ServiceRequest.create({
     student: req.user.id,
-    service: serviceId
+    service: serviceId,
+    category: service.category
   });
 
   res.status(201).json({

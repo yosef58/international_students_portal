@@ -3,6 +3,12 @@ import mongoose from 'mongoose';
 const serviceRequestSchema = new mongoose.Schema({
   student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
+  
+  category: {
+    type: String,
+    enum: ["education", "visa", "housing", "financial"],
+    required: true
+  },
   status: {
     type: String,
     enum: ['Pending', 'Approved', 'Rejected', 'Cancelled'],
