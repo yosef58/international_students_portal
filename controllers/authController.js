@@ -225,10 +225,77 @@ const logout = asyncwrapper(async (req, res, next) =>  {
   });
 });
 
+// =============================
+// GET ALL USERS (admin only)
+// =============================
+const getAllUsers = asyncwrapper(async (req, res, next) => {
+ 
+  // Optional filter by role: /users?role=student
+  const filter = {};
+  if (req.query.role) {
+    const allowed = ["student", "staff", "admin"];
+    if (!allowed.includes(req.query.role)) {
+      return next(new AppError("Invalid role filter", 400, httpstatustext.FAIL));
+    }
+    filter.role = req.query.role;
+  }
+ 
+  const pagination = await paginate(User, req, filter);
+ 
+  const users = await User.find(filter)
+    .select("-password")
+    .sort({ createdAt: -1 })
+    .skip(pagination.skip)
+    .limit(pagination.limit);
+ 
+  res.status(200).json({
+    status:     httpstatustext.SUCCESS,
+    page:       pagination.page,
+    results:    users.length,
+    totalPages: pagination.totalPages,
+    data:       users
+  });
+ 
+});
+ 
+// =============================
+// DELETE USER (admin only)
+// =============================
+const deleteUser = asyncwrapper(async (req, res, next) => {
+ 
+  const { id } = req.params;
+ 
+  // Prevent admin from deleting themselves
+  if (id === req.user.id) {
+    return next(new AppError("You cannot delete your own account", 400, httpstatustext.FAIL));
+  }
+ 
+  const user = await User.findById(id);
+  if (!user) {
+    return next(new AppError("User not found", 404, httpstatustext.FAIL));
+  }
+ 
+  // Delete the associated profile (Student or Employee) as well
+  if (user.role === "student") {
+    await Student.findOneAndDelete({ user: id });
+  } else {
+    await Employee.findOneAndDelete({ user: id });
+  }
+ 
+  await User.findByIdAndDelete(id);
+ 
+  res.status(200).json({
+    status:  httpstatustext.SUCCESS,
+    message: `User '${user.name}' and their profile deleted successfully`
+  });
+ 
+});
 
 export  {
    login,
    Studentregister,
    Employeeregister,
-   logout
+   logout,
+   deleteUser,
+   getAllUsers
 };
