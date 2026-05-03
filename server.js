@@ -11,7 +11,7 @@ import requestRoutes  from './routes/requestRoutes.js';
 import eventRoutes  from './routes/eventRoutes.js';
 import reportRoutes  from './routes/reportRoutes.js';
 import notificationRoutes  from './routes/notificationRoutes.js';
-import messageRoutes from './routes/messageRoutes.js';
+// import messageRoutes from './routes/messageRoutes.js';
 import httpstatustext from './utils/httpstatustext.js';
 
 
@@ -50,7 +50,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/messages', messageRoutes);
+// app.use('/api/messages', messageRoutes);
 
 
 app.use((err,req,res,next)=>{
