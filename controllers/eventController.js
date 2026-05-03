@@ -38,6 +38,7 @@ const createEvent = asyncwrapper(async (req, res, next) => {
   }
 });
 
+
 // ==============================
 // GET ALL EVENTS
 // ==============================

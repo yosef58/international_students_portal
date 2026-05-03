@@ -5,15 +5,20 @@ import {
   submitRequest,
   getMyRequests,
   reviewRequest,
-  cancelRequest,
-  uploadDocuments
+  cancelRequest
 } from '../controllers/requestController.js';
 import { uploadDocument } from '../middlewares/uploadMiddleware.js';
 
 const router = express.Router();
 
 // تقديم طلب جديد
-router.post('/', protect, allowRoles('student'), submitRequest);
+router.post(
+  '/',
+  protect,
+  allowRoles('student'),
+  uploadDocument.array('documents', 10),
+  submitRequest
+);
 
 // عرض طلباتي
 router.get('/my', protect, allowRoles('student'), getMyRequests);
@@ -24,12 +29,5 @@ router.put('/:id/review', protect, allowRoles('staff','admin'), reviewRequest);
 // إلغاء طلب (student)
 router.put('/:id/cancel', protect, allowRoles('student'), cancelRequest);
 
-router.post(
-  '/:id/upload',
-  protect,
-  allowRoles('student'),
-  uploadDocument.array('document',3),
-  uploadDocuments
-);
 
 export default router;

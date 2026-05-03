@@ -17,7 +17,7 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
 
   const service = await Service.findById(serviceId);
   if (!service) {
-    return next(new AppError("Service not found",404,httpstatustext.FAIL));
+    return next(new AppError("Service not found", 404, httpstatustext.FAIL));
   }
 
   const existingRequest = await ServiceRequest.findOne({
@@ -26,14 +26,28 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
   });
 
   if (existingRequest) {
-    return next(new AppError("Request already submitted",400,httpstatustext.FAIL));
+    return next(new AppError("Request already submitted", 400, httpstatustext.FAIL));
   }
 
+  // ✅ Build requiredDocuments from service
   const requiredDocuments = service.requiredDocuments.map(docName => ({
     name: docName,
     isUploaded: false,
     file: { filename: null, path: null }
   }));
+
+  // ✅ Match uploaded files to required documents by index or name
+  if (req.files && req.files.length > 0) {
+    req.files.forEach((file, index) => {
+      if (requiredDocuments[index]) {
+        requiredDocuments[index].isUploaded = true;
+        requiredDocuments[index].file = {
+          filename: file.originalname,
+          path: file.path  // Cloudinary URL
+        };
+      }
+    });
+  }
 
   const request = await ServiceRequest.create({
     student: req.user.id,
@@ -48,7 +62,6 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
   });
 
 });
-
 
 // ==============================
 // GET MY REQUESTS
@@ -144,55 +157,9 @@ const cancelRequest = asyncwrapper(async (req, res, next) => {
 });
 
 
-// ==============================
-// UPLOAD DOCUMENT
-// ==============================
-const uploadDocuments = asyncwrapper(async (req, res, next) => {
-
-  if (!req.file) {
-    return next(new AppError("No file uploaded",400,httpstatustext.FAIL));
-  }
-
-  const request = await ServiceRequest.findById(req.params.id);
-
-  if (!request) {
-    return next(new AppError("Request not found",404,httpstatustext.FAIL));
-  }
-
-  if (request.student.toString() !== req.user.id) {
-    return next(new AppError("Unauthorized",403,httpstatustext.FAIL));
-  }
-
-  const { documentName } = req.body; // ✅ frontend sends which document they're uploading
-
-  // ✅ Find the matching required document and mark it uploaded
-  const doc = request.requiredDocuments.find(d => d.name === documentName);
-
-  if (!doc) {
-    return next(new AppError(`Document "${documentName}" is not required for this request`, 400, httpstatustext.FAIL));
-  }
-
-  doc.isUploaded = true;
-  doc.file = {
-    filename: req.file.originalname,
-    path: req.file.path  // Cloudinary URL
-  };
-
-  await request.save();
-
-  res.status(200).json({
-    status: httpstatustext.SUCCESS,
-    message: "File uploaded successfully",
-    data: request
-  });
-
-});
-
-
 export  {
     submitRequest,
     getMyRequests,
     reviewRequest,
-    cancelRequest,
-    uploadDocuments
+    cancelRequest
   };

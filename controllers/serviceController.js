@@ -60,9 +60,6 @@ const updateService = asyncwrapper(async (req, res, next) => {
   const { name, description, category, price, requiredDocuments } = req.body;
   const updateData = { name, description, category, price, requiredDocuments };
 
-  if (req.file) updateData.image = req.file.path;
-
-
   if (req.file) {
     updateData.image = req.file.path;
   }
