@@ -8,20 +8,30 @@ import paginate from '../utils/pagination.js';
 // CREATE SERVICE
 // ==============================
 const createService = asyncwrapper(async (req, res, next) => {
+  
+  // 👇 Add this temporarily
+  console.log('req.file:', req.file);
+  console.log('req.body:', req.body);
 
   const { name, description, category, price, requiredDocuments } = req.body;
+
+  let parsedDocuments = requiredDocuments;
+  if (typeof requiredDocuments === 'string') {
+    try {
+      parsedDocuments = JSON.parse(requiredDocuments);
+    } catch {
+      parsedDocuments = [requiredDocuments];
+    }
+  }
+
   const service = await Service.create({
     name,
     description,
     category,
-    price,
-    requiredDocuments,
+    price: Number(price),
+    requiredDocuments: parsedDocuments,
     image: req.file ? req.file.path : null
   });
-  
-  if (!service) {
-    return next(new AppError("Service creation failed", 500, httpstatustext.ERROR));
-  }
 
   res.status(201).json({
     status: httpstatustext.SUCCESS,
