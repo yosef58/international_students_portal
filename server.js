@@ -1,6 +1,5 @@
 import express  from 'express';
 import cors  from 'cors';
-// import dotenv from 'dotenv';
 import connectDB  from './config/db.js';
 import cookieParser from "cookie-parser";
 import helmet from 'helmet';
@@ -12,8 +11,8 @@ import requestRoutes  from './routes/requestRoutes.js';
 import eventRoutes  from './routes/eventRoutes.js';
 import reportRoutes  from './routes/reportRoutes.js';
 import notificationRoutes  from './routes/notificationRoutes.js';
-// import messageRoutes from './routes/messageRoutes.js';
 import httpstatustext from './utils/httpstatustext.js';
+import messageRoutes from './routes/messageRoutes.js';
 
 
 if (process.env.NODE_ENV !== 'production') {
@@ -56,7 +55,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
-// app.use('/api/messages', messageRoutes);
+app.use('/api/messages', messageRoutes);
 
 
 app.use((err,req,res,next)=>{
