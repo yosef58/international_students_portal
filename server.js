@@ -54,6 +54,7 @@ app.use('/api/notifications', notificationRoutes);
 
 
 app.use((err,req,res,next)=>{
+  console.error('Global error:', err); // 👈 add this line
   res.status(err.StatusCode||500).json({status :err.StatusText||httpstatustext.ERROR,message:err.message})
 })
 
