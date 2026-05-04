@@ -1,5 +1,5 @@
 import User  from'../models/User.js';
-import Student  from'../models/student.js';
+import Student  from'../models/Student.js';
 import Employee  from'../models/Employee.js';
 
 import bcrypt from 'bcrypt';
