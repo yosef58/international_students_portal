@@ -1,3 +1,9 @@
+
+console.log('=== ENV CHECK ===');
+console.log('CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
+console.log('API_KEY:', process.env.CLOUDINARY_API_KEY);
+console.log('API_SECRET:', process.env.CLOUDINARY_API_SECRET);
+console.log('=================');
 import express  from 'express';
 import cors  from 'cors';
 import dotenv  from 'dotenv';
@@ -52,11 +58,6 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 // app.use('/api/messages', messageRoutes);
 
-console.log('=== ENV CHECK ===');
-console.log('CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('API_KEY:', process.env.CLOUDINARY_API_KEY);
-console.log('API_SECRET:', process.env.CLOUDINARY_API_SECRET);
-console.log('=================');
 
 app.use((err,req,res,next)=>{
   console.error('Global error:', err); // 👈 add this line
