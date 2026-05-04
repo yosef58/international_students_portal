@@ -1,6 +1,5 @@
 import express  from 'express';
 import cors  from 'cors';
-// import dotenv  from 'dotenv';
 import dotenv from 'dotenv';
 import connectDB  from './config/db.js';
 import cookieParser from "cookie-parser";
@@ -16,9 +15,6 @@ import notificationRoutes  from './routes/notificationRoutes.js';
 import httpstatustext from './utils/httpstatustext.js';
 
 
-// dotenv.config();
-// dotenv.config({ override: false });
-// Only load dotenv in development
 if (process.env.NODE_ENV !== 'production') {
   const dotenv = await import('dotenv');
   dotenv.config();
@@ -26,6 +22,8 @@ if (process.env.NODE_ENV !== 'production') {
 connectDB();
 
 const app = express();
+
+app.set('trust proxy', 1);
 
 // Middlewares
 app.use(
