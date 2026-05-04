@@ -69,7 +69,7 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
 const getMyRequests = asyncwrapper(async (req, res, next) => {
 
   const filter = { student: req.user.id };
-  const pagination = await paginate(ServiceRequest,req);
+  const pagination = await paginate(ServiceRequest, req , filter);
 
   const requests = await ServiceRequest.find(filter)
   .populate("service","name")
