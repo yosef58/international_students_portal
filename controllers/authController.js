@@ -8,7 +8,7 @@ import jwt  from'jsonwebtoken';
 import asyncwrapper  from'../middlewares/asyncwrapper.js';
 import AppError  from'../utils/appError.js';
 import httpstatustext  from'../utils/httpstatustext.js';
-
+import paginate from '../utils/pagination.js';
 
 // =============================
 // Generate Token
