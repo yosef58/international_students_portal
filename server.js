@@ -17,7 +17,12 @@ import httpstatustext from './utils/httpstatustext.js';
 
 
 // dotenv.config();
-dotenv.config({ override: false });
+// dotenv.config({ override: false });
+// Only load dotenv in development
+if (process.env.NODE_ENV !== 'production') {
+  const dotenv = await import('dotenv');
+  dotenv.config();
+}
 connectDB();
 
 const app = express();
