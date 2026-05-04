@@ -125,6 +125,50 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
 
 });
 
+// ==============================
+// GET ALL REQUESTS (staff / admin)
+// ==============================
+const getAllRequests = asyncwrapper(async (req, res, next) => {
+ 
+  const filter = {};
+ 
+  // Optional filters via query params
+  // ?status=Pending|Approved|Rejected|Cancelled
+  if (req.query.status) {
+    const allowed = ['Pending', 'Approved', 'Rejected', 'Cancelled'];
+    if (!allowed.includes(req.query.status)) {
+      return next(new AppError('Invalid status filter', 400, httpstatustext.FAIL));
+    }
+    filter.status = req.query.status;
+  }
+ 
+  // ?category=education|visa|housing|financial
+  if (req.query.category) {
+    const allowed = ['education', 'visa', 'housing', 'financial'];
+    if (!allowed.includes(req.query.category)) {
+      return next(new AppError('Invalid category filter', 400, httpstatustext.FAIL));
+    }
+    filter.category = req.query.category;
+  }
+ 
+  const pagination = await paginate(ServiceRequest, req, filter);
+ 
+  const requests = await ServiceRequest.find(filter)
+    .populate('student', 'name email avatar')
+    .populate('service', 'name category')
+    .sort({ createdAt: -1 })
+    .skip(pagination.skip)
+    .limit(pagination.limit);
+ 
+  res.status(200).json({
+    status:     httpstatustext.SUCCESS,
+    page:       pagination.page,
+    results:    requests.length,
+    totalPages: pagination.totalPages,
+    data:       requests
+  });
+ 
+});
 
 // ==============================
 // CANCEL REQUEST
@@ -160,6 +204,7 @@ const cancelRequest = asyncwrapper(async (req, res, next) => {
 export  {
     submitRequest,
     getMyRequests,
+    getAllRequests,
     reviewRequest,
     cancelRequest
   };
