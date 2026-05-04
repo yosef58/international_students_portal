@@ -52,16 +52,16 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 // app.use('/api/messages', messageRoutes);
 
-
-app.use((err,req,res,next)=>{
-  console.error('Global error:', err); // 👈 add this line
-  res.status(err.StatusCode||500).json({status :err.StatusText||httpstatustext.ERROR,message:err.message})
-})
 console.log('=== ENV CHECK ===');
 console.log('CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
 console.log('API_KEY:', process.env.CLOUDINARY_API_KEY);
 console.log('API_SECRET:', process.env.CLOUDINARY_API_SECRET);
 console.log('=================');
+
+app.use((err,req,res,next)=>{
+  console.error('Global error:', err); // 👈 add this line
+  res.status(err.StatusCode||500).json({status :err.StatusText||httpstatustext.ERROR,message:err.message})
+})
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
