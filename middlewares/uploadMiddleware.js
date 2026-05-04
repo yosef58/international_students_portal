@@ -3,6 +3,13 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
 
+
+// ✅ Validate env vars at startup
+const requiredEnvVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+requiredEnvVars.forEach(v => {
+  if (!process.env[v]) throw new Error(`Missing env variable: ${v}`);
+});
+
 const getCloudinary = () => {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,15 +19,27 @@ const getCloudinary = () => {
   return cloudinary;
 };
 
-// ✅ Only one createStorage function using getCloudinary()
-const createStorage = (folder) =>
+
+const createImageStorage = (folder) =>
   new CloudinaryStorage({
-    cloudinary: getCloudinary(),
-    params: {
+    cloudinary,
+    params: async (req, file) => ({
       folder: `uploads/${folder}`,
-      resource_type: 'auto',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'pdf']
-    }
+      resource_type: 'image',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      public_id: `${folder}-${Date.now()}`
+    })
+  });
+
+  const createDocumentStorage = (folder) =>
+  new CloudinaryStorage({
+    cloudinary,
+    params: async (req, file) => ({
+      folder: `uploads/${folder}`,
+      resource_type: 'raw',
+      allowed_formats: ['pdf', 'jpg', 'jpeg', 'png'],
+      public_id: `${folder}-${Date.now()}`
+    })
   });
 
 const documentFilter = (req, file, cb) => {
