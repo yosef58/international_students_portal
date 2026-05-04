@@ -3,13 +3,6 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
 
-
-// ✅ Validate env vars at startup
-const requiredEnvVars = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
-requiredEnvVars.forEach(v => {
-  if (!process.env[v]) throw new Error(`Missing env variable: ${v}`);
-});
-
 const getCloudinary = () => {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
