@@ -47,20 +47,21 @@ const imageFilter = (req, file, cb) => {
   allowed.includes(ext) ? cb(null, true) : cb(new Error('Images: JPG, PNG, WEBP only'));
 };
 
+// ✅ New — use the correct function per type
 export const uploadDocument = multer({
-  storage: createStorage('documents'),  // ✅ using createStorage
+  storage: createDocumentStorage('documents'),  // PDFs + images → resource_type: 'raw'
   fileFilter: documentFilter,
   limits: { fileSize: 15 * 1024 * 1024 }
 });
 
 export const uploadServiceImage = multer({
-  storage: createStorage('services'),   // ✅ using createStorage
+  storage: createImageStorage('services'),      // images only → resource_type: 'image'
   fileFilter: imageFilter,
   limits: { fileSize: 6 * 1024 * 1024 }
 });
 
 export const uploadAvatar = multer({
-  storage: createStorage('avatars'),    // ✅ using createStorage
+  storage: createImageStorage('avatars'),       // images only → resource_type: 'image'
   fileFilter: imageFilter,
   limits: { fileSize: 6 * 1024 * 1024 }
 });
