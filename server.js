@@ -1,12 +1,7 @@
-
-console.log('=== ENV CHECK ===');
-console.log('CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('API_KEY:', process.env.CLOUDINARY_API_KEY);
-console.log('API_SECRET:', process.env.CLOUDINARY_API_SECRET);
-console.log('=================');
 import express  from 'express';
 import cors  from 'cors';
 import dotenv  from 'dotenv';
+import dotenv from 'dotenv';
 import connectDB  from './config/db.js';
 import cookieParser from "cookie-parser";
 import helmet from 'helmet';
@@ -21,7 +16,7 @@ import notificationRoutes  from './routes/notificationRoutes.js';
 import httpstatustext from './utils/httpstatustext.js';
 
 
-dotenv.config();
+dotenv.config({ override: false });
 connectDB();
 
 const app = express();
