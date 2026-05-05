@@ -7,6 +7,7 @@ import AppError from '../utils/appError.js';
 import httpstatustext from '../utils/httpstatustext.js';
 import paginate from '../utils/pagination.js';
 
+const priorityOrder = {  high: 1, medium: 2, low: 3 };
 
 // ==============================
 // SUBMIT REQUEST
@@ -53,6 +54,7 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
     student: req.user.id,
     service: serviceId,
     category: service.category,
+    priority: service.priority,
     requiredDocuments
   });
 
@@ -72,7 +74,7 @@ const getMyRequests = asyncwrapper(async (req, res, next) => {
   const pagination = await paginate(ServiceRequest, req , filter);
 
   const requests = await ServiceRequest.find(filter)
-  .populate("service","name")
+  .populate("service","name category priority")
   .skip(pagination.skip)
   .limit(pagination.limit);
 
@@ -98,7 +100,8 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
     return next(new AppError("Invalid status",400,httpstatustext.FAIL));
   }
 
-  const request = await ServiceRequest.findById(req.params.id);
+  const request = await ServiceRequest.findById(req.params.id)
+  .populate("service", "name priority");
 
   if (!request) {
     return next(new AppError("Request not found",404,httpstatustext.FAIL));
@@ -115,7 +118,7 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
 
   await Notification.create({
     user: request.student,
-    message: `Your request has been ${status}`
+    message: `Your ${request.priority} priority request has been ${status}`
   });
 
   res.status(200).json({

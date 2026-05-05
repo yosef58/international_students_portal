@@ -9,6 +9,11 @@ const serviceRequestSchema = new mongoose.Schema({
     enum: ["education", "visa", "housing", "financial"],
     required: true
   },
+  priority: {
+    type: String,
+    enum: ["low", "medium", "high"],
+    required: true
+  },
   status: {
     type: String,
     enum: ['Pending', 'Approved', 'Rejected', 'Cancelled'],
