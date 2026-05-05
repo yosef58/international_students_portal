@@ -5,15 +5,17 @@ const serviceSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-
   description: { 
     type: String 
   },
-
+  priority: {
+    type: String,
+    enum: ["low", "medium", "high", "urgent"],
+    default: "medium"
+  },
   image: { 
     type: String   // هتخزن path أو URL
   },
-
   category: {
     type: String,
     enum: ["education", "visa", "housing", "financial"],
