@@ -57,6 +57,11 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
     priority: service.priority,
     requiredDocuments
   });
+  
+  await Notification.create({
+    user: req.user.id,
+    message: `Your ${request.priority} priority request for ${service.name} has been submitted successfully`
+  });
 
   res.status(201).json({
     status: httpstatustext.SUCCESS,
@@ -118,7 +123,7 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
 
   await Notification.create({
     user: request.student,
-    message: `Your ${request.priority} priority request has been ${status}`
+    message: `Your ${request.priority} priority request for ${request.service.name} has been ${status}${notes ? ` — ${notes}` : ''}`
   });
 
   res.status(200).json({
@@ -195,6 +200,11 @@ const cancelRequest = asyncwrapper(async (req, res, next) => {
   request.status = "Cancelled";
 
   await request.save();
+
+  await Notification.create({
+    user: request.student,
+    message: `Your ${request.priority} priority request has been cancelled successfully`
+  });
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
