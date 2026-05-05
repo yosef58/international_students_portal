@@ -5,6 +5,7 @@ import {
   submitRequest,
   getMyRequests,
   getAllRequests,
+  getRequest,
   reviewRequest,
   cancelRequest
 } from '../controllers/requestController.js';
@@ -26,6 +27,9 @@ router.get('/my', protect, allowRoles('student'), getMyRequests);
 
 // عرض كل الطلبات (staff / admin) — supports ?status= and ?category= filters
 router.get('/all', protect, allowRoles('staff', 'admin'), getAllRequests);
+
+// عرض طلب واحد 
+router.get('/:id', protect, allowRoles('staff', 'admin'), getRequest);
 
 // مراجعة طلب (staff)
 router.put('/:id/review', protect, allowRoles('staff','admin'), reviewRequest);

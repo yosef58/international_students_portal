@@ -179,6 +179,46 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
 });
 
 // ==============================
+// GET SINGLE REQUEST
+// ==============================
+const getRequest = asyncwrapper(async (req, res, next) => {
+
+  const request = await ServiceRequest.findById(req.params.id)
+    .populate("service", "name category priority requiredDocuments")
+    .populate("student", "name email avatar");
+
+  if (!request) {
+    return next(new AppError("Request not found", 404, httpstatustext.FAIL));
+  }
+
+  if (
+    req.user.role === "student" &&
+    request.student._id.toString() !== req.user.id
+  ) {
+    return next(new AppError("Unauthorized", 403, httpstatustext.FAIL));
+  }
+
+  // ✅ Separate uploaded and missing documents
+  const uploadedDocs   = request.requiredDocuments.filter(doc => doc.isUploaded === true);
+  const missingDocs    = request.requiredDocuments.filter(doc => doc.isUploaded === false);
+
+  res.status(200).json({
+    status: httpstatustext.SUCCESS,
+    data: {
+      ...request.toObject(),
+      documents: {
+        uploaded: uploadedDocs,
+        missing:  missingDocs,
+        total:    request.requiredDocuments.length,
+        uploadedCount: uploadedDocs.length,
+        missingCount:  missingDocs.length
+      }
+    }
+  });
+
+});
+
+// ==============================
 // CANCEL REQUEST
 // ==============================
 const cancelRequest = asyncwrapper(async (req, res, next) => {
@@ -218,6 +258,7 @@ export  {
     submitRequest,
     getMyRequests,
     getAllRequests,
+    getRequest,
     reviewRequest,
     cancelRequest
   };
