@@ -28,7 +28,7 @@ router.patch(
   uploadServiceImage.single('image'),
   updateService);
 
-router.get('/', protect, getServices);
+router.get('/', getServices);
 
 export default router;
 
