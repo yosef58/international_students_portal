@@ -30,7 +30,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://internationalstudentsportal-production-5e18.up.railway.app"
+      "https://international-student-bortal.netlify.app"
     ],
     credentials: true
   })
