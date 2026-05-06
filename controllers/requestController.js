@@ -1,6 +1,6 @@
 import ServiceRequest from '../models/ServiceRequest.js';
 import Service from '../models/Service.js';
-import Notification from '../models/Notification.js';
+import { createNotification, createBulkNotifications } from '../utils/createNotification.js';
 
 import asyncwrapper from '../middlewares/asyncwrapper.js';
 import AppError from '../utils/appError.js';
@@ -58,8 +58,8 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
     requiredDocuments
   });
   
-  await Notification.create({
-    user: req.user.id,
+  await createNotification({
+    userId: req.user.id,
     message: `Your ${request.priority} priority request for ${service.name} has been submitted successfully`
   });
 
@@ -121,8 +121,8 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
 
   await request.save();
 
-  await Notification.create({
-    user: request.student,
+  await createNotification({
+    userId: request.student,
     message: `Your ${request.priority} priority request for ${request.service.name} has been ${status}${notes ? ` — ${notes}` : ''}`
   });
 
@@ -240,11 +240,11 @@ const cancelRequest = asyncwrapper(async (req, res, next) => {
   request.status = "Cancelled";
 
   await request.save();
-
-  await Notification.create({
-    user: request.student,
+  
+  await createNotification({
+    userId: request.student,
     message: `Your ${request.priority} priority request has been cancelled successfully`
-  });
+  })
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,

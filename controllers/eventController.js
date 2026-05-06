@@ -1,6 +1,6 @@
 import Event  from '../models/Event.js';
-import Notification  from '../models/Notification.js';
 import User  from '../models/User.js';
+import { createBulkNotifications } from '../utils/createNotification.js';
 
 import asyncwrapper  from '../middlewares/asyncwrapper.js';
 import AppError  from '../utils/appError.js';
@@ -22,20 +22,11 @@ const createEvent = asyncwrapper(async (req, res, next) => {
     });
 
   // إرسال إشعار لكل الطلاب
-  try{
-    const students = await User.find({ role: "student" });
-
-    const notifications = students.map(student => ({
-      user: student._id,
-      message: `New event created: ${event.title}`
-    }));
-  
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
-    }
-  }catch (err) {
-    console.error("Notification error:", err.message); // fails silently
-  }
+  const students = await User.find({ role: "student" }, "_id");
+  await createBulkNotifications({
+    userIds: students.map(s => s._id),
+    message: `New event created: ${event.title}`
+  });
 });
 
 
