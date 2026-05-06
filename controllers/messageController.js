@@ -104,12 +104,44 @@ const getMyMessages = asyncwrapper(async (req, res, next) => {
     .skip(pagination.skip)
     .limit(pagination.limit);
 
+  // ✅ Mark all received unread messages as read
+  await Message.updateMany(
+    { receiver: req.user.id, isRead: false },
+    { isRead: true }
+  );
+
+  // ✅ Group messages by conversation
+  const conversations = {};
+
+  messages.forEach(msg => {
+    const otherPerson =
+      msg.sender._id.toString() === req.user.id
+        ? msg.receiver
+        : msg.sender;
+
+    const key = otherPerson._id.toString();
+
+    if (!conversations[key]) {
+      conversations[key] = {
+        with: otherPerson,
+        messages: [],
+        unreadCount: 0
+      };
+    }
+
+    conversations[key].messages.push(msg);
+
+    if (!msg.isRead && msg.receiver._id.toString() === req.user.id) {
+      conversations[key].unreadCount++;
+    }
+  });
+
   res.status(200).json({
     status: httpstatustext.SUCCESS,
     page: pagination.page,
-    results: messages.length,
+    results: Object.keys(conversations).length,
     totalPages: pagination.totalPages,
-    data: messages
+    data: Object.values(conversations)
   });
 
 });
@@ -119,30 +151,66 @@ const getMyMessages = asyncwrapper(async (req, res, next) => {
 // GET ALL MESSAGES (staff sees all students messages)
 // ==============================
 const getAllMessages = asyncwrapper(async (req, res, next) => {
+ 
+  const filter = {
+    $or: [
+      { sender: req.user.id },
+      { receiver: req.user.id }
+    ]
+  };
 
-    const filter = {
-        $or: [
-            { sender:   req.user.id },
-            { receiver: req.user.id }
-        ]
-    };
   const pagination = await paginate(Message, req, filter);
 
   const messages = await Message.find(filter)
     .populate("sender", "name role avatar")
-    .sort({ createdAt: -1 })
+    .populate("receiver", "name role avatar")
+    .sort({ createdAt: 1 })
     .skip(pagination.skip)
     .limit(pagination.limit);
+
+  // ✅ Mark all received unread messages as read
+  await Message.updateMany(
+    { receiver: req.user.id, isRead: false },
+    { isRead: true }
+  );
+
+  // ✅ Group messages by conversation
+  const conversations = {};
+
+  messages.forEach(msg => {
+    const otherPerson =
+      msg.sender._id.toString() === req.user.id
+        ? msg.receiver   // staff sent → other is receiver
+        : msg.sender;    // staff received → other is sender
+
+    const key = otherPerson._id.toString();
+
+    if (!conversations[key]) {
+      conversations[key] = {
+        with: otherPerson,
+        messages: [],
+        unreadCount: 0
+      };
+    }
+
+    conversations[key].messages.push(msg);
+
+    // ✅ count unread before marking
+    if (!msg.isRead && msg.receiver._id.toString() === req.user.id) {
+      conversations[key].unreadCount++;
+    }
+  });
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
     page: pagination.page,
-    results: messages.length,
+    results: Object.keys(conversations).length,
     totalPages: pagination.totalPages,
-    data: messages
+    data: Object.values(conversations)
   });
 
 });
+
 
 export {
   sendMessage,
