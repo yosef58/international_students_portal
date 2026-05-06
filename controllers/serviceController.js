@@ -9,11 +9,8 @@ import paginate from '../utils/pagination.js';
 // ==============================
 const createService = asyncwrapper(async (req, res, next) => {
   
-  // 👇 Add this temporarily
-  console.log('req.file:', req.file);
-  console.log('req.body:', req.body);
 
-  const { name, description, category, price, requiredDocuments } = req.body;
+  const { name, description, category, priority, price, requiredDocuments } = req.body;
 
   let parsedDocuments = requiredDocuments;
   if (typeof requiredDocuments === 'string') {
@@ -67,7 +64,7 @@ const getServices = asyncwrapper(async (req, res, next) => {
 // ==============================
 const updateService = asyncwrapper(async (req, res, next) => {
 
-  const { name, description, category, price, requiredDocuments } = req.body;
+  const { name, description, priority, category, price, requiredDocuments } = req.body;
   const updateData = { name, description, category, price, requiredDocuments };
 
   if (req.file) {
