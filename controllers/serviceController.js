@@ -25,6 +25,7 @@ const createService = asyncwrapper(async (req, res, next) => {
     name,
     description,
     category,
+    priority,
     price: Number(price),
     requiredDocuments: parsedDocuments,
     image: req.file ? req.file.path : null
@@ -65,7 +66,7 @@ const getServices = asyncwrapper(async (req, res, next) => {
 const updateService = asyncwrapper(async (req, res, next) => {
 
   const { name, description, priority, category, price, requiredDocuments } = req.body;
-  const updateData = { name, description, category, price, requiredDocuments };
+  const updateData = { name, description, category, price,priority, requiredDocuments };
 
   if (req.file) {
     updateData.image = req.file.path;
