@@ -14,7 +14,12 @@ import paginate  from '../utils/pagination.js';
 const createEvent = asyncwrapper(async (req, res, next) => {
   
   const { title, description, date, location } = req.body;
-  const event = await Event.create({ title, description, date, location, createdBy: req.user.id });
+  const event = await Event.create({ title, 
+    description, 
+    date, 
+    location, 
+    image: req.file ? req.file.path : null,
+    createdBy: req.user.id });
   
     res.status(201).json({
       status: httpstatustext.SUCCESS,
@@ -77,20 +82,22 @@ const getEvent = asyncwrapper(async (req, res, next) => {
 // ==============================
 const updateEvent = asyncwrapper(async (req, res, next) => {
 
-  const { id } = req.params;
-
   const { title, description, date, location } = req.body;
+
+  const updateData = { title, description, date, location };
+
+  if (req.file) {
+    updateData.image = req.file.path;
+  }
+
   const event = await Event.findByIdAndUpdate(
-    id,
-    { title, description, date, location },
+    req.params.id,
+    updateData,
     { new: true, runValidators: true }
   );
 
-
   if (!event) {
-    return next(
-      new AppError("Event not found", 404, httpstatustext.FAIL)
-    );
+    return next(new AppError("Event not found", 404, httpstatustext.FAIL));
   }
 
   res.status(200).json({

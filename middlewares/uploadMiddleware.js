@@ -61,3 +61,9 @@ export const uploadAvatar = multer({
   fileFilter: imageFilter,
   limits: { fileSize: 6 * 1024 * 1024 }
 });
+
+export const uploadEventImage = multer({
+  storage: createImageStorage('events'),
+  fileFilter: imageFilter,
+  limits: { fileSize: 6 * 1024 * 1024 }
+});
