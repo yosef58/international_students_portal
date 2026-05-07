@@ -1,8 +1,9 @@
 import ServiceRequest from '../models/ServiceRequest.js';
 import Service from '../models/Service.js';
-import { createNotification, createBulkNotifications } from '../utils/createNotification.js';
-
 import asyncwrapper from '../middlewares/asyncwrapper.js';
+
+import { createNotification, createBulkNotifications } from '../utils/createNotification.js';
+import getLeastBusyStaff from '../utils/getLeastBusyStaff.js';
 import AppError from '../utils/appError.js';
 import httpstatustext from '../utils/httpstatustext.js';
 import paginate from '../utils/pagination.js';
@@ -49,12 +50,19 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
       }
     });
   }
+  
+  const assignedStaff = await getLeastBusyStaff();
+
+  if (!assignedStaff) {
+    return next(new AppError("No staff available", 404, httpstatustext.FAIL));
+  }
 
   const request = await ServiceRequest.create({
     student: req.user.id,
     service: serviceId,
     category: service.category,
     priority: service.priority,
+    assignedTo: assignedStaff,
     requiredDocuments
   });
   
@@ -137,10 +145,14 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
 // GET ALL REQUESTS (staff / admin)
 // ==============================
 const getAllRequests = asyncwrapper(async (req, res, next) => {
- 
+
   const filter = {};
- 
-  // Optional filters via query params
+
+  // ✅ Staff only sees requests assigned to them
+  if (req.user.role === "staff") {
+    filter.assignedTo = req.user.id;
+  }
+
   // ?status=Pending|Approved|Rejected|Cancelled
   if (req.query.status) {
     const allowed = ['Pending', 'Approved', 'Rejected', 'Cancelled'];
@@ -149,7 +161,7 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
     }
     filter.status = req.query.status;
   }
- 
+
   // ?category=education|visa|housing|financial
   if (req.query.category) {
     const allowed = ['education', 'visa', 'housing', 'financial'];
@@ -158,26 +170,40 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
     }
     filter.category = req.query.category;
   }
- 
+
+  // ?priority=low|medium|high|urgent
+  if (req.query.priority) {
+    const allowed = ['low', 'medium', 'high' ];
+    if (!allowed.includes(req.query.priority)) {
+      return next(new AppError('Invalid priority filter', 400, httpstatustext.FAIL));
+    }
+    filter.priority = req.query.priority;
+  }
+
   const pagination = await paginate(ServiceRequest, req, filter);
- 
+
   const requests = await ServiceRequest.find(filter)
-    .populate('student', 'name email avatar')
-    .populate('service', 'name category')
+    .populate('student',    'name email avatar')
+    .populate('service',    'name category priority')
+    .populate('assignedTo', 'name email avatar isActive')  // ✅ show assigned staff
     .sort({ createdAt: -1 })
     .skip(pagination.skip)
     .limit(pagination.limit);
- 
+
+  // ✅ Sort by priority (urgent first)
+  const sorted = requests.sort(
+    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+  );
+
   res.status(200).json({
     status:     httpstatustext.SUCCESS,
     page:       pagination.page,
-    results:    requests.length,
+    results:    sorted.length,
     totalPages: pagination.totalPages,
-    data:       requests
+    data:       sorted
   });
- 
-});
 
+});
 // ==============================
 // GET SINGLE REQUEST
 // ==============================

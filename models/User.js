@@ -26,6 +26,14 @@ const userSchema = new mongoose.Schema(
   avatar: {
     type: String,
     default: null
+  },
+  isActive: {
+    type: Boolean,
+    default: false
+  },
+  lastSeen: { 
+    type: Date, 
+    default: null 
   }
 },
 { timestamps: true }

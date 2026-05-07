@@ -1,24 +1,42 @@
 import mongoose from 'mongoose';
 
 const serviceRequestSchema = new mongoose.Schema({
-  student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  service: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
-  
+  student: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  },
+
+  service: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Service', 
+    required: true 
+  },
+
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+
   category: {
     type: String,
     enum: ["education", "visa", "housing", "financial"],
     required: true
   },
+
   priority: {
     type: String,
     enum: ["low", "medium", "high"],
     required: true
   },
+
   status: {
     type: String,
     enum: ['Pending', 'Approved', 'Rejected', 'Cancelled'],
     default: 'Pending'
   },
+  
   requiredDocuments: [
     {
       name: { type: String, required: true },       // e.g. "Passport Copy"

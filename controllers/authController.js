@@ -192,6 +192,11 @@ const login = asyncwrapper(async (req, res, next) => {
       };
     }
   }
+  
+  await User.findByIdAndUpdate(user._id, {
+    isActive: true,
+    lastSeen: new Date()
+  });
 
   res.json({
     status: httpstatustext.SUCCESS,
@@ -202,6 +207,7 @@ const login = asyncwrapper(async (req, res, next) => {
       email: user.email,
       role: user.role,
       avatar: user.avatar,
+      isActive: true,
       ...extraData
     }
   });
@@ -213,6 +219,12 @@ const login = asyncwrapper(async (req, res, next) => {
 // // LOGOUT
 // =============================
 const logout = asyncwrapper(async (req, res, next) =>  {
+  
+  await User.findByIdAndUpdate(req.user._id, {
+    isActive: false,
+    lastSeen: new Date()
+  });
+
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
@@ -291,11 +303,27 @@ const deleteUser = asyncwrapper(async (req, res, next) => {
  
 });
 
+// =============================
+// ACTIVE STAFF (admin only)
+// =============================
+const activestaff =asyncwrapper(async (req, res) => {
+  const onlineStaff = await User.find(
+    { role: "staff", isActive: true },
+    "name email avatar isActive lastSeen"
+  );
+  res.json({
+    status: "success",
+    results: onlineStaff.length,
+    data: onlineStaff
+  });
+});
+
 export  {
    login,
    Studentregister,
    Employeeregister,
    logout,
    deleteUser,
-   getAllUsers
+   getAllUsers,
+   activestaff
 };

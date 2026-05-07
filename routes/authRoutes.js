@@ -1,5 +1,5 @@
 import express from 'express';
-import { Studentregister,Employeeregister, login, logout , getAllUsers , deleteUser} from '../controllers/authController.js';
+import { Studentregister,Employeeregister, login, logout , getAllUsers , deleteUser, activestaff} from '../controllers/authController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import { allowRoles } from '../middlewares/roleMiddleware.js';
 import rateLimit from 'express-rate-limit';
@@ -24,5 +24,5 @@ router.post('/login',loginLimiter, login);
 router.post('/logout',protect, logout);
 router.get('/users', protect, allowRoles('admin'), getAllUsers);
 router.delete('/users/:id', protect, allowRoles('admin'), deleteUser);
-
+router.get('/staff/online', protect, allowRoles('admin'), activestaff)
 export default router;
