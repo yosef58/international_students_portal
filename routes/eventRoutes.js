@@ -24,7 +24,7 @@ router.patch(
 
 router.delete('/:id', protect, allowRoles('admin', 'staff'), deleteEvent);
 router.get('/:id', protect, getEvent);
-router.get('/', protect, getEvents);
+router.get('/', getEvents);
 
 export default router;
 
