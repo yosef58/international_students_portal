@@ -5,7 +5,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const sendNotificationEmail = async ({ to, subject, message }) => {
   try {
     await resend.emails.send({
-      from: 'https://international-student-bortal.netlify.app',
+      from: 'onboarding@resend.dev',
       to,
       subject,
       html: `
