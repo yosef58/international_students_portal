@@ -72,7 +72,7 @@ app.get('/test-email', async (req, res) => {
 }); 
 
 app.use((err,req,res,next)=>{
-  console.error('Global error:', err); // 👈 add this line
+  console.error('Global error:', err);
   res.status(err.StatusCode||500).json({status :err.StatusText||httpstatustext.ERROR,message:err.message})
 })
 
