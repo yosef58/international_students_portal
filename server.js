@@ -61,7 +61,7 @@ app.get('/test-email', async (req, res) => {
   try {
     const sendNotificationEmail = (await import('./utils/emailService.js')).default;
     await sendNotificationEmail({
-      to: 'youremail@gmail.com',
+      to: 'yosefaza23@gmail.com',
       subject: 'Test Email',
       message: 'This is a test notification'
     });
