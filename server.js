@@ -65,7 +65,7 @@ app.get('/test-email', async (req, res) => {
       subject: 'Test Email',
       message: 'This is a test notification'
     });
-    res.json({ status: 'success', message: 'Email sent' });
+    res.json({ status: 'successes', message: 'Email sent' });
   } catch (err) {
     res.json({ status: 'fail', message: err.message });
   }
