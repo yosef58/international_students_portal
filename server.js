@@ -57,6 +57,20 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
 
+app.get('/test-email', async (req, res) => {
+  try {
+    const sendNotificationEmail = (await import('./utils/emailService.js')).default;
+    await sendNotificationEmail({
+      to: 'yosefaza23@gmail.com',
+      subject: 'Test Email',
+      message: 'This is a test notification'
+    });
+    res.json({ status: 'successes', message: 'Email sent' });
+  } catch (err) {
+    res.json({ status: 'fail', message: err.message });
+  }
+}); 
+
 app.use((err,req,res,next)=>{
   console.error('Global error:', err);
   res.status(err.StatusCode||500).json({status :err.StatusText||httpstatustext.ERROR,message:err.message})
