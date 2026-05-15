@@ -48,14 +48,6 @@ app.use(
   })
 );
 
-// ALL Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/requests', requestRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/messages', messageRoutes);
 
 app.get('/test-email', async (req, res) => {
   try {
@@ -70,6 +62,14 @@ app.get('/test-email', async (req, res) => {
     res.json({ status: 'fail', message: err.message });
   }
 }); 
+// ALL Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/requests', requestRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.use((err,req,res,next)=>{
   console.error('Global error:', err);
