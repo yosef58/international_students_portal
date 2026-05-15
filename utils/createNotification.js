@@ -2,44 +2,64 @@ import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import sendNotificationEmail from './emailService.js';
 
-// ✅ Single notification
 const createNotification = async ({ userId, message }) => {
   try {
     await Notification.create({ user: userId, message });
+    console.log(`✅ Notification created for user: ${userId}`);
 
-    // get user email
-    const user = await User.findById(userId).select('email name');
-    if (user) {
-      await sendNotificationEmail({
-        to: user.email,
-        subject: 'New Notification',
-        message
-      });
+    const user = await User.findById(userId).select('email notificationEmail name');
+    
+    if (!user) {
+      console.log(`❌ User not found: ${userId}`);
+      return;
     }
+
+    console.log(`✅ User found: ${user.email}`);
+
+    const sendTo = user.notificationEmail || user.email;
+    console.log(`📧 Sending email to: ${sendTo}`);
+
+    await sendNotificationEmail({
+      to:      sendTo,
+      subject: 'New Notification',
+      message
+    });
+
+    console.log(`✅ Email sent to: ${sendTo}`);
+
   } catch (err) {
-    console.error("Notification error:", err.message);
+    console.error("❌ Notification error:", err.message);
   }
 };
 
-// ✅ Bulk notifications (for notifying all staff)
 const createBulkNotifications = async ({ userIds, message }) => {
   try {
     const notifications = userIds.map(id => ({ user: id, message }));
     await Notification.insertMany(notifications);
+    console.log(`✅ Bulk notifications created for ${userIds.length} users`);
 
-    // send email to each
-    const users = await User.find({ _id: { $in: userIds } }).select('email name');
+    const users = await User.find(
+      { _id: { $in: userIds } }
+    ).select('email notificationEmail name');
+
+    console.log(`✅ Found ${users.length} users to email`);
+
     await Promise.all(
-      users.map(user =>
-        sendNotificationEmail({
-          to: user.email,
+      users.map(user => {
+        const sendTo = user.notificationEmail || user.email;
+        console.log(`📧 Sending bulk email to: ${sendTo}`);
+        return sendNotificationEmail({
+          to:      sendTo,
           subject: 'New Notification',
           message
-        })
-      )
+        });
+      })
     );
+
+    console.log(`✅ All bulk emails sent`);
+
   } catch (err) {
-    console.error("Bulk notification error:", err.message);
+    console.error("❌ Bulk notification error:", err.message);
   }
 };
 
