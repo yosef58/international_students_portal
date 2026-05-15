@@ -1,23 +1,13 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-const getTransporter = () => {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',  // ✅ use host instead of service
-    port: 587,               // ✅ port 587 instead of 465
-    secure: false,           // ✅ false for port 587
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASS
-    }
-  });
-};
+const getResend = () => new Resend(process.env.RESEND_API_KEY);
 
 const sendNotificationEmail = async ({ to, subject, message }) => {
   try {
-    const transporter = getTransporter();
+    const resend = getResend();
 
-    const info = await transporter.sendMail({
-      from:    `"Students Portal" <${process.env.GMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from:    'onboarding@resend.dev',  // ✅ until you get a domain
       to,
       subject,
       html: `
@@ -32,7 +22,12 @@ const sendNotificationEmail = async ({ to, subject, message }) => {
       `
     });
 
-    console.log(`✅ Email sent to ${to} | id: ${info.messageId}`);
+    if (error) {
+      console.error("❌ Resend error:", error.message);
+      return;
+    }
+
+    console.log(`✅ Email sent to ${to} | id: ${data.id}`);
 
   } catch (err) {
     console.error("❌ Email send error:", err.message);
