@@ -2,7 +2,9 @@ import nodemailer from 'nodemailer';
 
 const getTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',  // ✅ use host instead of service
+    port: 587,               // ✅ port 587 instead of 465
+    secure: false,           // ✅ false for port 587
     auth: {
       user: process.env.GMAIL_USER,
       pass: process.env.GMAIL_APP_PASS
@@ -12,12 +14,7 @@ const getTransporter = () => {
 
 const sendNotificationEmail = async ({ to, subject, message }) => {
   try {
-    // ✅ Create transporter only when sending — env vars are loaded by then
     const transporter = getTransporter();
-
-    // ✅ Verify connection before sending
-    await transporter.verify();
-    console.log(`✅ Transporter verified`);
 
     const info = await transporter.sendMail({
       from:    `"Students Portal" <${process.env.GMAIL_USER}>`,
@@ -39,8 +36,6 @@ const sendNotificationEmail = async ({ to, subject, message }) => {
 
   } catch (err) {
     console.error("❌ Email send error:", err.message);
-    console.error("❌ GMAIL_USER:", process.env.GMAIL_USER);       // ✅ debug
-    console.error("❌ GMAIL_APP_PASS exists:", !!process.env.GMAIL_APP_PASS); // ✅ debug
   }
 };
 
