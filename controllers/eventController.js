@@ -1,6 +1,6 @@
 import Event  from '../models/Event.js';
 import User  from '../models/User.js';
-import { createBulkNotifications } from '../utils/createNotification.js';
+import { createBulkNotifications ,createNotification } from '../utils/createNotification.js';
 
 import asyncwrapper  from '../middlewares/asyncwrapper.js';
 import AppError  from '../utils/appError.js';
