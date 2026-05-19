@@ -7,7 +7,7 @@ const createNotification = async ({ userId, message }) => {
     await Notification.create({ user: userId, message });
     console.log(`✅ Notification created for user: ${userId}`);
 
-    const user = await User.findById(userId).select('email notificationEmail name');
+    const user = await User.findById(userId).select('email contactEmail name');
     
     if (!user) {
       console.log(`❌ User not found: ${userId}`);
@@ -16,7 +16,7 @@ const createNotification = async ({ userId, message }) => {
 
     console.log(`✅ User found: ${user.email}`);
 
-    const sendTo = user.notificationEmail || user.email;
+    const sendTo = user.contactEmail || user.email;
     console.log(`📧 Sending email to: ${sendTo}`);
 
     await sendNotificationEmail({
@@ -40,13 +40,13 @@ const createBulkNotifications = async ({ userIds, message }) => {
 
     const users = await User.find(
       { _id: { $in: userIds } }
-    ).select('email notificationEmail name');
+    ).select('email contactEmail name');
 
     console.log(`✅ Found ${users.length} users to email`);
 
     await Promise.all(
       users.map(user => {
-        const sendTo = user.notificationEmail || user.email;
+        const sendTo = user.contactEmail || user.email;
         console.log(`📧 Sending bulk email to: ${sendTo}`);
         return sendNotificationEmail({
           to:      sendTo,
