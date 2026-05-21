@@ -154,6 +154,56 @@ const requestsPerStudent = asyncwrapper(async (req, res, next) => {
 });
 
 // ==============================
+//  TOTAL REVENUE (APPROVED REQUESTS)
+// ==============================
+const totalRevenue = asyncwrapper(async (req, res, next) => {
+
+  const result = await ServiceRequest.aggregate([
+    {
+      $match: { status: "Approved" }
+    },
+    {
+      $lookup: {
+        from: "services",
+        localField: "service",
+        foreignField: "_id",
+        as: "serviceInfo"
+      }
+    },
+    { $unwind: "$serviceInfo" },
+    {
+      $group: {
+        _id: null,
+        totalRevenue:    { $sum: "$serviceInfo.price" },
+        approvedCount:   { $sum: 1 },
+        averagePrice:    { $avg: "$serviceInfo.price" }
+      }
+    },
+    {
+      $project: {
+        _id:           0,
+        totalRevenue:  1,
+        approvedCount: 1,
+        averagePrice:  { $round: ["$averagePrice", 2] }
+      }
+    }
+  ]);
+
+  const data = result[0] || {
+    totalRevenue:  0,
+    approvedCount: 0,
+    averagePrice:  0
+  };
+
+  res.status(200).json({
+    status: httpstatustext.SUCCESS,
+    data
+  });
+
+});
+
+
+// ==============================
 //  DASHBOARD SUMMARY
 // ==============================
 const dashboardSummary = asyncwrapper(async (req, res, next) => {
@@ -178,5 +228,6 @@ export  {
     dashboardSummary,
     requestsPerStudent,
     requestsByStatus,
-    requestsPerService
+    requestsPerService,
+    totalRevenue
 };
