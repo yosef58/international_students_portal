@@ -210,6 +210,7 @@ const login = asyncwrapper(async (req, res, next) => {
       role: user.role,
       avatar: user.avatar,
       isActive: true,
+      contactEmail:user.contactEmail,
       ...extraData
     }
   });
