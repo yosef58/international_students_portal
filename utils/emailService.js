@@ -7,7 +7,7 @@ const sendNotificationEmail = async ({ to, subject, message }) => {
     const resend = getResend();
 
     const { data, error } = await resend.emails.send({
-      from:    'internationalstudentsportal.railway.internal',
+      from:    'onboarding@resend.dev',
       to,
       subject,
       html: `
