@@ -39,9 +39,7 @@ const Studentregister = asyncwrapper(async (req, res, next) => {
   } = req.body;
 
   if (!name || !email || !password) {
-    return next(
-      new AppError("Data are required", 400, httpstatustext.FAIL)
-    );
+    return next(new AppError("Data are required", 400, httpstatustext.FAIL));
   }
 
   const existingUser = await User.findOne({ email });
@@ -99,9 +97,7 @@ const Employeeregister = asyncwrapper(async (req, res, next) => {
   } = req.body;
 
   if (!name || !email || !password) {
-    return next(
-      new AppError("Data are required", 400, httpstatustext.FAIL)
-    );
+    return next(new AppError("Data are required", 400, httpstatustext.FAIL));
   }
 
   const existingUser = await User.findOne({ email });
@@ -177,7 +173,7 @@ const login = asyncwrapper(async (req, res, next) => {
   httpOnly: true,
   secure: true,       // production لازم https
   sameSite: "none",   // مهم مع cross-origin
-  maxAge: 7 * 24 * 60 * 60 * 1000
+  maxAge: 1 * 24 * 60 * 60 * 1000
 });
 
  let extraData = {};
