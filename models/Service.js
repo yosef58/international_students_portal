@@ -16,6 +16,11 @@ const serviceSchema = new mongoose.Schema({
   image: { 
     type: String   // هتخزن path أو URL
   },
+  expireDays: {
+    type: Number,
+    default: 7,
+    min: 1
+  },
   category: {
     type: String,
     enum: ["education", "visa", "housing", "financial"],

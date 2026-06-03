@@ -33,10 +33,13 @@ const serviceRequestSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['Pending', 'Approved', 'Rejected', 'Cancelled'],
+    enum: ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Expired'],
     default: 'Pending'
   },
-  
+  expiresAt: {
+    type: Date,
+    required: true
+  },
   requiredDocuments: [
     {
       name: { type: String, required: true },       // e.g. "Passport Copy"

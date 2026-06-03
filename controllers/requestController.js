@@ -57,13 +57,17 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
     return next(new AppError("No staff available", 404, httpstatustext.FAIL));
   }
 
+  const expireDays = service.expireDays || 7;
+  const expiresAt  = new Date(Date.now() + expireDays * 24 * 60 * 60 * 1000);
+
   const request = await ServiceRequest.create({
     student: req.user.id,
     service: serviceId,
     category: service.category,
     priority: service.priority,
     assignedTo: assignedStaff,
-    requiredDocuments
+    requiredDocuments,
+    expiresAt
   });
   
   await createNotification({
@@ -87,7 +91,7 @@ const getMyRequests = asyncwrapper(async (req, res, next) => {
   const pagination = await paginate(ServiceRequest, req , filter);
 
   const requests = await ServiceRequest.find(filter)
-  .populate("service","name category priority")
+  .populate("service","name category priority expireDays")
   .skip(pagination.skip)
   .limit(pagination.limit);
 
@@ -155,7 +159,7 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
 
   // ?status=Pending|Approved|Rejected|Cancelled
   if (req.query.status) {
-    const allowed = ['Pending', 'Approved', 'Rejected', 'Cancelled'];
+    const allowed = ['Pending', 'Approved', 'Rejected', 'Cancelled','Expired'];
     if (!allowed.includes(req.query.status)) {
       return next(new AppError('Invalid status filter', 400, httpstatustext.FAIL));
     }
@@ -184,7 +188,7 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
 
   const requests = await ServiceRequest.find(filter)
     .populate('student',    'name email avatar')
-    .populate('service',    'name category priority')
+    .populate('service',    'name category priority expireDays')
     .populate('assignedTo', 'name email avatar isActive')  // ✅ show assigned staff
     .sort({ createdAt: -1 })
     .skip(pagination.skip)
@@ -210,7 +214,7 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
 const getRequest = asyncwrapper(async (req, res, next) => {
 
   const request = await ServiceRequest.findById(req.params.id)
-    .populate("service", "name category priority requiredDocuments")
+    .populate("service", "name category priority requiredDocuments expireDays")
     .populate("student", "name email avatar");
 
   if (!request) {

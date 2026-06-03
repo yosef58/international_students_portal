@@ -19,6 +19,10 @@ const eventSchema = new mongoose.Schema({
         ref: 'User',
         required: true
       },
+  deadlineReminderSent: {
+    type: Boolean,
+    default: false
+  },
       reservedAt: { type: Date, default: Date.now }
     }
   ]

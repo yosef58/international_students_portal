@@ -13,6 +13,7 @@ import reportRoutes  from './routes/reportRoutes.js';
 import notificationRoutes  from './routes/notificationRoutes.js';
 import httpstatustext from './utils/httpstatustext.js';
 import messageRoutes from './routes/messageRoutes.js';
+import startScheduler from './utils/Scheduler.js';
 
 
 if (process.env.NODE_ENV !== 'production') {
@@ -48,20 +49,8 @@ app.use(
   })
 );
 
+startScheduler();
 
-app.get('/test-email', async (req, res) => {
-  try {
-    const sendNotificationEmail = (await import('./utils/emailService.js')).default;
-    await sendNotificationEmail({
-      to: 'yosefaza23@gmail.com',
-      subject: 'Test Email',
-      message: 'This is a test notification'
-    });
-    res.json({ status: 'successes', message: 'Email sent' });
-  } catch (err) {
-    res.json({ status: 'fail', message: err.message });
-  }
-}); 
 // ALL Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);

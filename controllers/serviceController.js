@@ -10,7 +10,7 @@ import paginate from '../utils/pagination.js';
 const createService = asyncwrapper(async (req, res, next) => {
   
 
-  const { name, description, category, priority, price, requiredDocuments } = req.body;
+  const { name, description, category, priority, price, requiredDocuments ,expireDays } = req.body;
 
   let parsedDocuments = requiredDocuments;
   if (typeof requiredDocuments === 'string') {
@@ -21,6 +21,10 @@ const createService = asyncwrapper(async (req, res, next) => {
     }
   }
 
+  const parsedExpireDays = expireDays ? Number(expireDays) : 7; 
+  if (isNaN(parsedExpireDays) || parsedExpireDays < 1) {
+    return next(new AppError("expireDays must be a number greater than 0", 400, httpstatustext.FAIL));
+  }
   const service = await Service.create({
     name,
     description,
@@ -28,6 +32,7 @@ const createService = asyncwrapper(async (req, res, next) => {
     priority,
     price: Number(price),
     requiredDocuments: parsedDocuments,
+    expireDays: parsedExpireDays,
     image: req.file ? req.file.path : null
   });
 
@@ -65,8 +70,16 @@ const getServices = asyncwrapper(async (req, res, next) => {
 // ==============================
 const updateService = asyncwrapper(async (req, res, next) => {
 
-  const { name, description, priority, category, price, requiredDocuments } = req.body;
+  const { name, description, priority, category, price, requiredDocuments, expireDays } = req.body;
   const updateData = { name, description, category, price,priority, requiredDocuments };
+
+    if (expireDays !== undefined) {
+    const parsed = Number(expireDays);
+    if (isNaN(parsed) || parsed < 1) {
+      return next(new AppError("expireDays must be a number greater than 0", 400, httpstatustext.FAIL));
+    }
+    updateData.expireDays = parsed;
+  }
 
   if (req.file) {
     updateData.image = req.file.path;
