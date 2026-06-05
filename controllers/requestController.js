@@ -128,14 +128,20 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
     return next(new AppError("Request already reviewed",400,httpstatustext.FAIL));
   }
 
-  request.status = status;
-  request.reviewNotes = notes;
 
-  await request.save();
-
+    const updatedRequest = await ServiceRequest.findByIdAndUpdate(
+    req.params.id,
+    {
+      status,
+      reviewNotes: notes || ""
+    },
+    { new: true }
+  ).populate("service", "name priority");
+ 
+  const notesPart = notes ? ` — Staff note: "${notes}"` : '';
   await createNotification({
-    userId: request.student,
-    message: `Your ${request.priority} priority request for ${request.service.name} has been ${status}${notes ? ` — ${notes}` : ''}`
+    userId:  updatedRequest.student,
+    message: `Your ${updatedRequest.priority} priority request for "${updatedRequest.service.name}" has been ${status}.${notesPart}`
   });
 
   res.status(200).json({
