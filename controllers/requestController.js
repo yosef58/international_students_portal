@@ -146,7 +146,7 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
-    data: request
+    data: updatedRequest
   });
 
 });
