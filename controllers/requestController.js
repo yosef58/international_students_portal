@@ -8,8 +8,6 @@ import AppError from '../utils/appError.js';
 import httpstatustext from '../utils/httpstatustext.js';
 import paginate from '../utils/pagination.js';
 
-const priorityOrder = {  high: 1, medium: 2, low: 3 };
-
 // ==============================
 // SUBMIT REQUEST
 // ==============================
@@ -38,7 +36,7 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
     file: { filename: null, path: null }
   }));
 
-  // ✅ Match uploaded files to required documents by index or name
+  // ✅ Match uploaded files to required documents by index
   if (req.files && req.files.length > 0) {
     req.files.forEach((file, index) => {
       if (requiredDocuments[index]) {
@@ -88,12 +86,12 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
 const getMyRequests = asyncwrapper(async (req, res, next) => {
 
   const filter = { student: req.user.id };
-  const pagination = await paginate(ServiceRequest, req , filter);
+  const pagination = await paginate(ServiceRequest, req, filter);
 
   const requests = await ServiceRequest.find(filter)
-  .populate("service","name category priority expireDays")
-  .skip(pagination.skip)
-  .limit(pagination.limit);
+    .populate("service", "name category priority expireDays")
+    .skip(pagination.skip)
+    .limit(pagination.limit);
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
@@ -113,23 +111,22 @@ const reviewRequest = asyncwrapper(async (req, res, next) => {
 
   const { status, notes } = req.body;
 
-  if (!["Approved","Rejected"].includes(status)) {
-    return next(new AppError("Invalid status",400,httpstatustext.FAIL));
+  if (!["Approved", "Rejected"].includes(status)) {
+    return next(new AppError("Invalid status", 400, httpstatustext.FAIL));
   }
 
   const request = await ServiceRequest.findById(req.params.id)
-  .populate("service", "name priority");
+    .populate("service", "name priority");
 
   if (!request) {
-    return next(new AppError("Request not found",404,httpstatustext.FAIL));
+    return next(new AppError("Request not found", 404, httpstatustext.FAIL));
   }
 
   if (request.status !== "Pending") {
-    return next(new AppError("Request already reviewed",400,httpstatustext.FAIL));
+    return next(new AppError("Request already reviewed", 400, httpstatustext.FAIL));
   }
 
-
-    const updatedRequest = await ServiceRequest.findByIdAndUpdate(
+  const updatedRequest = await ServiceRequest.findByIdAndUpdate(
     req.params.id,
     {
       status,
@@ -163,9 +160,9 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
     filter.assignedTo = req.user.id;
   }
 
-  // ?status=Pending|Approved|Rejected|Cancelled
+  // ?status=Pending|Approved|Rejected|Cancelled|Expired
   if (req.query.status) {
-    const allowed = ['Pending', 'Approved', 'Rejected', 'Cancelled','Expired'];
+    const allowed = ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Expired'];
     if (!allowed.includes(req.query.status)) {
       return next(new AppError('Invalid status filter', 400, httpstatustext.FAIL));
     }
@@ -181,9 +178,9 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
     filter.category = req.query.category;
   }
 
-  // ?priority=low|medium|high|urgent
+  // ?priority=low|medium|high
   if (req.query.priority) {
-    const allowed = ['low', 'medium', 'high' ];
+    const allowed = ['low', 'medium', 'high'];
     if (!allowed.includes(req.query.priority)) {
       return next(new AppError('Invalid priority filter', 400, httpstatustext.FAIL));
     }
@@ -192,28 +189,80 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
 
   const pagination = await paginate(ServiceRequest, req, filter);
 
-  const requests = await ServiceRequest.find(filter)
-    .populate('student',    'name email avatar')
-    .populate('service',    'name category priority expireDays')
-    .populate('assignedTo', 'name email avatar isActive')  // ✅ show assigned staff
-    .sort({ createdAt: -1 })
-    .skip(pagination.skip)
-    .limit(pagination.limit);
-
-  // ✅ Sort by priority (urgent first)
-  const sorted = requests.sort(
-    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
-  );
+  // ✅ Full priority + date sort in MongoDB pipeline before pagination
+  // This ensures high-priority items surface on page 1 across ALL pages,
+  // not just within the current page as a JS re-sort would do.
+  const requests = await ServiceRequest.aggregate([
+    { $match: filter },
+    {
+      $addFields: {
+        priorityWeight: {
+          $switch: {
+            branches: [
+              { case: { $eq: ["$priority", "high"]   }, then: 1 },
+              { case: { $eq: ["$priority", "medium"] }, then: 2 },
+              { case: { $eq: ["$priority", "low"]    }, then: 3 }
+            ],
+            default: 4
+          }
+        }
+      }
+    },
+    { $sort: { priorityWeight: 1, createdAt: -1 } },
+    { $skip: pagination.skip },
+    { $limit: pagination.limit },
+    {
+      $lookup: {
+        from: "users",
+        localField: "student",
+        foreignField: "_id",
+        as: "student"
+      }
+    },
+    { $unwind: "$student" },
+    {
+      $lookup: {
+        from: "services",
+        localField: "service",
+        foreignField: "_id",
+        as: "service"
+      }
+    },
+    { $unwind: "$service" },
+    {
+      $lookup: {
+        from: "users",
+        localField: "assignedTo",
+        foreignField: "_id",
+        as: "assignedTo"
+      }
+    },
+    {
+      $unwind: {
+        path: "$assignedTo",
+        preserveNullAndEmptyArrays: true  // assignedTo can be null
+      }
+    },
+    // ✅ Project only the fields the frontend needs (mirrors previous .populate selects)
+    {
+      $project: {
+        priorityWeight: 0,         // remove the helper field from response
+        "student.password": 0,
+        "assignedTo.password": 0
+      }
+    }
+  ]);
 
   res.status(200).json({
     status:     httpstatustext.SUCCESS,
     page:       pagination.page,
-    results:    sorted.length,
+    results:    requests.length,
     totalPages: pagination.totalPages,
-    data:       sorted
+    data:       requests
   });
 
 });
+
 // ==============================
 // GET SINGLE REQUEST
 // ==============================
@@ -235,17 +284,17 @@ const getRequest = asyncwrapper(async (req, res, next) => {
   }
 
   // ✅ Separate uploaded and missing documents
-  const uploadedDocs   = request.requiredDocuments.filter(doc => doc.isUploaded === true);
-  const missingDocs    = request.requiredDocuments.filter(doc => doc.isUploaded === false);
+  const uploadedDocs = request.requiredDocuments.filter(doc => doc.isUploaded === true);
+  const missingDocs  = request.requiredDocuments.filter(doc => doc.isUploaded === false);
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
     data: {
       ...request.toObject(),
       documents: {
-        uploaded: uploadedDocs,
-        missing:  missingDocs,
-        total:    request.requiredDocuments.length,
+        uploaded:      uploadedDocs,
+        missing:       missingDocs,
+        total:         request.requiredDocuments.length,
         uploadedCount: uploadedDocs.length,
         missingCount:  missingDocs.length
       }
@@ -262,25 +311,24 @@ const cancelRequest = asyncwrapper(async (req, res, next) => {
   const request = await ServiceRequest.findById(req.params.id);
 
   if (!request) {
-    return next(new AppError("Request not found",404,httpstatustext.FAIL));
+    return next(new AppError("Request not found", 404, httpstatustext.FAIL));
   }
 
   if (request.student.toString() !== req.user.id) {
-    return next(new AppError("Unauthorized",403,httpstatustext.FAIL));
+    return next(new AppError("Unauthorized", 403, httpstatustext.FAIL));
   }
 
   if (request.status !== "Pending") {
-    return next(new AppError("Cannot cancel this request",400,httpstatustext.FAIL));
+    return next(new AppError("Cannot cancel this request", 400, httpstatustext.FAIL));
   }
 
   request.status = "Cancelled";
-
   await request.save();
   
   await createNotification({
     userId: request.student,
     message: `Your ${request.priority} priority request has been cancelled successfully`
-  })
+  });
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
@@ -290,11 +338,11 @@ const cancelRequest = asyncwrapper(async (req, res, next) => {
 });
 
 
-export  {
-    submitRequest,
-    getMyRequests,
-    getAllRequests,
-    getRequest,
-    reviewRequest,
-    cancelRequest
-  };
+export {
+  submitRequest,
+  getMyRequests,
+  getAllRequests,
+  getRequest,
+  reviewRequest,
+  cancelRequest
+};

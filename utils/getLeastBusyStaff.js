@@ -13,21 +13,26 @@ const getLeastBusyStaff = async () => {
 
   if (staffList.length === 0) return null;
 
-  // ✅ Count pending requests for each staff
-  const staffRequestCounts = await Promise.all(
-    staffList.map(async (staff) => {
-      const count = await ServiceRequest.countDocuments({
-        assignedTo: staff._id,
-        status: "Pending"
-      });
-      return { staffId: staff._id, count };
-    })
-  );
+  const staffIds = staffList.map(s => s._id);
 
-  // ✅ Sort by count ascending and pick the least busy
-  staffRequestCounts.sort((a, b) => a.count - b.count);
+  // ✅ Single aggregate instead of N+1 countDocuments queries
+  const pendingCounts = await ServiceRequest.aggregate([
+    { $match: { assignedTo: { $in: staffIds }, status: "Pending" } },
+    { $group: { _id: "$assignedTo", count: { $sum: 1 } } }
+  ]);
 
-  return staffRequestCounts[0].staffId;
+  // Build lookup map — staff with 0 pending won't appear in aggregate results
+  const countMap = {};
+  pendingCounts.forEach(r => { countMap[r._id.toString()] = r.count; });
+
+  // ✅ Find least busy (default to 0 for staff not in the map)
+  const leastBusy = staffIds.reduce((min, staffId) => {
+    const count    = countMap[staffId.toString()]  || 0;
+    const minCount = countMap[min.toString()]       || 0;
+    return count < minCount ? staffId : min;
+  });
+
+  return leastBusy;
 
 };
 

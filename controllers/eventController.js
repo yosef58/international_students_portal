@@ -12,32 +12,30 @@ import paginate  from '../utils/pagination.js';
 // CREATE EVENT
 // ==============================
 const createEvent = asyncwrapper(async (req, res, next) => {
-  
-  const { title, description, date, location,capacity } = req.body;
+  const { title, description, date, location, capacity } = req.body;
   if (!capacity || capacity < 1) {
     return next(new AppError("Capacity must be at least 1", 400, httpstatustext.FAIL));
   }
-  const event = await Event.create({ title, 
-    description, 
-    date, 
-    location,
-    capacity,
-    image: req.file ? req.file.path : null,
-    createdBy: req.user.id });
-  
-    res.status(201).json({
-      status: httpstatustext.SUCCESS,
-      data: event
-    });
 
-  // إرسال إشعار لكل الطلاب
+  const event = await Event.create({
+    title, description, date, location, capacity,
+    image: req.file ? req.file.path : null,
+    createdBy: req.user.id
+  });
+
   const students = await User.find({ role: "student" }, "_id");
   if (students.length > 0) {
-      await createBulkNotifications({
-        userIds: students.map(s => s._id),
-        message: `New event created: ${event.title}`
-      });
-}});
+    await createBulkNotifications({
+      userIds: students.map(s => s._id),
+      message: `New event created: ${event.title}`
+    });
+  }
+
+  res.status(201).json({
+    status: httpstatustext.SUCCESS,
+    data: event
+  });
+});
 
 
 // ==============================

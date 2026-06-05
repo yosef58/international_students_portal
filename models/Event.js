@@ -10,6 +10,10 @@ const eventSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  deadlineReminderSent: {
+    type: Boolean,
+    default: false
+  },
   capacity:{ type: Number, required: true, min: 1 },
   reservedCount:{ type: Number, default: 0 },
   reservations: [
@@ -19,10 +23,6 @@ const eventSchema = new mongoose.Schema({
         ref: 'User',
         required: true
       },
-  deadlineReminderSent: {
-    type: Boolean,
-    default: false
-  },
       reservedAt: { type: Date, default: Date.now }
     }
   ]

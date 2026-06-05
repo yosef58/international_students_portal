@@ -24,24 +24,31 @@ const sendMessage = asyncwrapper(async (req, res, next) => {
   if (!allStaff.length) {
     return next(new AppError('No staff available', 404, httpstatustext.FAIL));
   }
- 
-  // Count how many active conversations each staff member has
-  // (number of distinct students who sent them messages)
-  const staffLoads = await Promise.all(
-    allStaff.map(async (staff) => {
-      const count = await Message.countDocuments({ receiver: staff._id });
-      return { staffId: staff._id, count };
-    })
-  );
- 
-  // Pick the staff member with the fewest messages (least busy)
-  const assigned = staffLoads.reduce((min, curr) =>
-    curr.count < min.count ? curr : min
-  );
- 
+
+  const staffIds = allStaff.map(s => s._id);
+
+  // ✅ Single aggregate: count distinct active student senders per staff member
+  // Two-stage group: first get unique (receiver, sender) pairs, then count per receiver
+  const loads = await Message.aggregate([
+    { $match: { receiver: { $in: staffIds } } },
+    { $group: { _id: { receiver: "$receiver", sender: "$sender" } } },
+    { $group: { _id: "$_id.receiver", activeConversations: { $sum: 1 } } }
+  ]);
+
+  // Build lookup map — staff with no messages won't appear in aggregate results
+  const loadMap = {};
+  loads.forEach(l => { loadMap[l._id.toString()] = l.activeConversations; });
+
+  // ✅ Pick staff member with fewest active conversations (default 0 if absent)
+  const assigned = staffIds.reduce((min, staffId) => {
+    const count    = loadMap[staffId.toString()] || 0;
+    const minCount = loadMap[min.toString()]      || 0;
+    return count < minCount ? staffId : min;
+  });
+
   const newMessage = await Message.create({
     sender:   req.user.id,
-    receiver: assigned.staffId,
+    receiver: assigned,
     message
   });
  
@@ -104,13 +111,7 @@ const getMyMessages = asyncwrapper(async (req, res, next) => {
     .skip(pagination.skip)
     .limit(pagination.limit);
 
-  // ✅ Mark all received unread messages as read
-  await Message.updateMany(
-    { receiver: req.user.id, isRead: false },
-    { isRead: true }
-  );
-
-  // ✅ Group messages by conversation
+  // ✅ Step 1: count unread from in-memory snapshot BEFORE marking read
   const conversations = {};
 
   messages.forEach(msg => {
@@ -131,10 +132,17 @@ const getMyMessages = asyncwrapper(async (req, res, next) => {
 
     conversations[key].messages.push(msg);
 
+    // ✅ isRead reflects DB state at fetch time — reliable, no race condition
     if (!msg.isRead && msg.receiver._id.toString() === req.user.id) {
       conversations[key].unreadCount++;
     }
   });
+
+  // ✅ Step 2: mark as read AFTER counting
+  await Message.updateMany(
+    { receiver: req.user.id, isRead: false },
+    { isRead: true }
+  );
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
@@ -168,13 +176,7 @@ const getAllMessages = asyncwrapper(async (req, res, next) => {
     .skip(pagination.skip)
     .limit(pagination.limit);
 
-  // ✅ Mark all received unread messages as read
-  await Message.updateMany(
-    { receiver: req.user.id, isRead: false },
-    { isRead: true }
-  );
-
-  // ✅ Group messages by conversation
+  // ✅ Step 1: count unread from in-memory snapshot BEFORE marking read
   const conversations = {};
 
   messages.forEach(msg => {
@@ -195,11 +197,17 @@ const getAllMessages = asyncwrapper(async (req, res, next) => {
 
     conversations[key].messages.push(msg);
 
-    // ✅ count unread before marking
+    // ✅ isRead reflects DB state at fetch time — reliable, no race condition
     if (!msg.isRead && msg.receiver._id.toString() === req.user.id) {
       conversations[key].unreadCount++;
     }
   });
+
+  // ✅ Step 2: mark as read AFTER counting
+  await Message.updateMany(
+    { receiver: req.user.id, isRead: false },
+    { isRead: true }
+  );
 
   res.status(200).json({
     status: httpstatustext.SUCCESS,
