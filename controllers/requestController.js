@@ -155,12 +155,10 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
 
   const filter = {};
 
-  // ✅ Staff only sees requests assigned to them
   if (req.user.role === "staff") {
-    filter.assignedTo = req.user.id;
+    filter.assignedTo = new mongoose.Types.ObjectId(req.user.id); // ✅ cast to ObjectId
   }
 
-  // ?status=Pending|Approved|Rejected|Cancelled|Expired
   if (req.query.status) {
     const allowed = ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Expired'];
     if (!allowed.includes(req.query.status)) {
@@ -169,7 +167,6 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
     filter.status = req.query.status;
   }
 
-  // ?category=education|visa|housing|financial
   if (req.query.category) {
     const allowed = ['education', 'visa', 'housing', 'financial'];
     if (!allowed.includes(req.query.category)) {
@@ -178,7 +175,6 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
     filter.category = req.query.category;
   }
 
-  // ?priority=low|medium|high
   if (req.query.priority) {
     const allowed = ['low', 'medium', 'high'];
     if (!allowed.includes(req.query.priority)) {
@@ -189,11 +185,8 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
 
   const pagination = await paginate(ServiceRequest, req, filter);
 
-  // ✅ Full priority + date sort in MongoDB pipeline before pagination
-  // This ensures high-priority items surface on page 1 across ALL pages,
-  // not just within the current page as a JS re-sort would do.
   const requests = await ServiceRequest.aggregate([
-    { $match: filter },
+    { $match: filter }, // ✅ now assignedTo is ObjectId, match works correctly
     {
       $addFields: {
         priorityWeight: {
@@ -240,13 +233,12 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
     {
       $unwind: {
         path: "$assignedTo",
-        preserveNullAndEmptyArrays: true  // assignedTo can be null
+        preserveNullAndEmptyArrays: true
       }
     },
-    // ✅ Project only the fields the frontend needs (mirrors previous .populate selects)
     {
       $project: {
-        priorityWeight: 0,         // remove the helper field from response
+        priorityWeight: 0,
         "student.password": 0,
         "assignedTo.password": 0
       }
@@ -262,7 +254,6 @@ const getAllRequests = asyncwrapper(async (req, res, next) => {
   });
 
 });
-
 // ==============================
 // GET SINGLE REQUEST
 // ==============================
