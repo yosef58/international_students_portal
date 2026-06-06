@@ -1,6 +1,7 @@
 import ServiceRequest from '../models/ServiceRequest.js';
 import Service from '../models/Service.js';
 import asyncwrapper from '../middlewares/asyncwrapper.js';
+import mongoose from 'mongoose';
 
 import { createNotification, createBulkNotifications } from '../utils/createNotification.js';
 import getLeastBusyStaff from '../utils/getLeastBusyStaff.js';
