@@ -29,14 +29,14 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
     return next(new AppError("Request already submitted", 400, httpstatustext.FAIL));
   }
 
-  // ✅ Build requiredDocuments from service
+  //  Build requiredDocuments from service
   const requiredDocuments = service.requiredDocuments.map(docName => ({
     name: docName,
     isUploaded: false,
     file: { filename: null, path: null }
   }));
 
-  // ✅ Match uploaded files to required documents by index
+  //  Match uploaded files to required documents by index
   if (req.files && req.files.length > 0) {
     req.files.forEach((file, index) => {
       if (requiredDocuments[index]) {

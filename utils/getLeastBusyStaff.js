@@ -3,37 +3,40 @@ import ServiceRequest from '../models/ServiceRequest.js';
 
 const getLeastBusyStaff = async () => {
 
-  // ✅ First try online staff only
-  let staffList = await User.find({ role: "staff", isActive: true }, "_id");
+  const FRESH_THRESHOLD_HOURS = 2; // consider staff stale if lastSeen > 2h ago
+  const freshCutoff = new Date(Date.now() - FRESH_THRESHOLD_HOURS * 60 * 60 * 1000);
 
-  // ✅ Fallback to any staff if no one is online
+  // ✅ First try: online staff who were actually seen recently
+  let staffList = await User.find({
+    role: "staff",
+    isActive: true,
+    lastSeen: { $gte: freshCutoff }  // ← freshness guard
+  }, "_id");
+
+  // ✅ Fallback 1: any online staff (isActive=true, regardless of lastSeen)
+  if (staffList.length === 0) {
+    staffList = await User.find({ role: "staff", isActive: true }, "_id");
+  }
+
+  // ✅ Fallback 2: any staff at all
   if (staffList.length === 0) {
     staffList = await User.find({ role: "staff" }, "_id");
   }
 
   if (staffList.length === 0) return null;
 
-  const staffIds = staffList.map(s => s._id);
+  const staffRequestCounts = await Promise.all(
+    staffList.map(async (staff) => {
+      const count = await ServiceRequest.countDocuments({
+        assignedTo: staff._id,
+        status: "Pending"
+      });
+      return { staffId: staff._id, count };
+    })
+  );
 
-  // ✅ Single aggregate instead of N+1 countDocuments queries
-  const pendingCounts = await ServiceRequest.aggregate([
-    { $match: { assignedTo: { $in: staffIds }, status: "Pending" } },
-    { $group: { _id: "$assignedTo", count: { $sum: 1 } } }
-  ]);
-
-  // Build lookup map — staff with 0 pending won't appear in aggregate results
-  const countMap = {};
-  pendingCounts.forEach(r => { countMap[r._id.toString()] = r.count; });
-
-  // ✅ Find least busy (default to 0 for staff not in the map)
-  const leastBusy = staffIds.reduce((min, staffId) => {
-    const count    = countMap[staffId.toString()]  || 0;
-    const minCount = countMap[min.toString()]       || 0;
-    return count < minCount ? staffId : min;
-  });
-
-  return leastBusy;
-
+  staffRequestCounts.sort((a, b) => a.count - b.count);
+  return staffRequestCounts[0].staffId;
 };
 
 export default getLeastBusyStaff;
