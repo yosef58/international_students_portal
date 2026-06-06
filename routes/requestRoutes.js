@@ -26,13 +26,13 @@ router.post(
 router.get('/my', protect, allowRoles('student'), getMyRequests);
 
 // عرض كل الطلبات (staff / admin) — supports ?status= and ?category= filters
-router.get('/all', protect, allowRoles('staff', 'admin'), getAllRequests);
+router.get('/all', protect, allowRoles('staff'), getAllRequests);
 
 // عرض طلب واحد 
-router.get('/:id', protect, allowRoles('staff', 'admin'), getRequest);
+router.get('/:id', protect, allowRoles('staff'), getRequest);
 
 // مراجعة طلب (staff)
-router.put('/:id/review', protect, allowRoles('staff','admin'), reviewRequest);
+router.put('/:id/review', protect, allowRoles('staff'), reviewRequest);
 
 // إلغاء طلب (student)
 router.put('/:id/cancel', protect, allowRoles('student'), cancelRequest);

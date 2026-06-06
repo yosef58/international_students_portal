@@ -8,7 +8,7 @@ import { uploadAvatar } from '../middlewares/uploadMiddleware.js';
 const router = express.Router();
 
 
-router.post('/register/student', protect, allowRoles('admin','staff'), uploadAvatar.single('avatar'),Studentregister);
+router.post('/register/student', protect, allowRoles('admin'), uploadAvatar.single('avatar'),Studentregister);
 router.post('/register/employee', protect, allowRoles('admin'),uploadAvatar.single('avatar'),Employeeregister);
 router.post('/login', login);
 router.post('/logout',protect, logout);

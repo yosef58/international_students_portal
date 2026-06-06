@@ -11,8 +11,8 @@ import {
 const router = express.Router();
 
 router.post('/',protect, allowRoles('student'),sendMessage);
-router.post('/reply',protect, allowRoles('staff', 'admin'), replyMessage);
+router.post('/reply',protect, allowRoles('staff'), replyMessage);
 router.get('/my',protect, allowRoles('student'),getMyMessages);
-router.get('/all',protect, allowRoles('staff', 'admin'), getAllMessages);
+router.get('/all',protect, allowRoles('staff'), getAllMessages);
 
 export default router;

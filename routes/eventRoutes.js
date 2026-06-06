@@ -22,8 +22,8 @@ router.patch(
 );
 router.post('/:id/reserve',protect, allowRoles('student'),reserveEvent);
 router.delete('/:id/reserve',protect, allowRoles('student'),cancelReservation);
-router.get('/:id/reservations',protect, allowRoles('admin', 'staff'), getEventReservations);
-router.delete('/:id', protect, allowRoles('admin', 'staff'), deleteEvent);
+router.get('/:id/reservations',protect, allowRoles('admin'), getEventReservations);
+router.delete('/:id', protect, allowRoles('admin'), deleteEvent);
 router.get('/:id', protect, getEvent);
 router.get('/', getEvents);
 

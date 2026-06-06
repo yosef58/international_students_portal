@@ -14,17 +14,17 @@ const router = express.Router();
 router.post(
   '/',
   protect,
-  allowRoles('admin', 'staff'),
+  allowRoles('admin'),
   uploadServiceImage.single('image'),
   createService
 );
 
-router.delete('/:id', protect, allowRoles('admin', 'staff'), deleteService);
+router.delete('/:id', protect, allowRoles('admin'), deleteService);
 
 router.patch(
   '/:id',
   protect, 
-  allowRoles('admin', 'staff'), 
+  allowRoles('admin'), 
   uploadServiceImage.single('image'),
   updateService);
 
