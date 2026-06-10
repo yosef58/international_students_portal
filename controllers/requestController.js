@@ -23,12 +23,13 @@ const submitRequest = asyncwrapper(async (req, res, next) => {
 
   const existingRequest = await ServiceRequest.findOne({
     student: req.user.id,
-    service: serviceId
+    service: serviceId,
+    status: "Pending"
   });
 
   if (existingRequest) {
-    return next(new AppError("Request already submitted", 400, httpstatustext.FAIL));
-  }
+    return next(new AppError("You already have a pending request for this service", 400, httpstatustext.FAIL));
+}
 
   //  Build requiredDocuments from service
   const requiredDocuments = service.requiredDocuments.map(docName => ({

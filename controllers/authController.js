@@ -270,6 +270,67 @@ const getAllUsers = asyncwrapper(async (req, res, next) => {
 });
  
 // =============================
+// UPDATE USER (admin only)
+// =============================
+const updateUser = asyncwrapper(async (req, res, next) => {
+
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+  if (!user) {
+    return next(new AppError("User not found", 404, httpstatustext.FAIL));
+  }
+
+  // ── Update User fields ──────────────────────────────────
+  const { name, email, contactEmail, password, role, avatar } = req.body;
+
+  if (name)         user.name         = name;
+  if (email)        user.email        = email;
+  if (contactEmail) user.contactEmail = contactEmail;
+  if (role)         user.role         = role;
+  if (avatar)       user.avatar       = avatar;
+
+  // ✅ Hash the new password if provided
+  if (password) {
+    user.password = await bcrypt.hash(password, 10);
+  }
+
+  await user.save();
+
+  // ── Update profile fields based on role ─────────────────
+  let profile = null;
+
+  if (user.role === "student") {
+    const { studentId, passportNumber, nationality, phone, gender } = req.body;
+    profile = await Student.findOneAndUpdate(
+      { user: id },
+      { studentId, passportNumber, nationality, phone, gender },
+      { new: true, runValidators: true }
+    );
+  } else {
+    const { employeeId, department } = req.body;
+    profile = await Employee.findOneAndUpdate(
+      { user: id },
+      { employeeId, department },
+      { new: true, runValidators: true }
+    );
+  }
+
+  // ── Return updated data (exclude password from response) ─
+  const updatedUser = await User.findById(id).select("-password");
+
+  res.status(200).json({
+    status: httpstatustext.SUCCESS,
+    message: "User updated successfully",
+    data: {
+      ...updatedUser.toObject(),
+      profile
+    }
+  });
+
+});
+
+// =============================
 // DELETE USER (admin only)
 // =============================
 const deleteUser = asyncwrapper(async (req, res, next) => {
@@ -324,5 +385,6 @@ export  {
    logout,
    deleteUser,
    getAllUsers,
-   activestaff
+   activestaff,
+   updateUser
 };
