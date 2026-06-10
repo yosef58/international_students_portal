@@ -52,9 +52,6 @@ const serviceRequestSchema = new mongoose.Schema({
   ],
   reviewNotes: String,
 }, { timestamps: true });
-serviceRequestSchema.index(
-  { student: 1, service: 1 },
-  { unique: true }
-);
+serviceRequestSchema.index({ student: 1, service: 1 });
 
 export default mongoose.model('ServiceRequest', serviceRequestSchema);
